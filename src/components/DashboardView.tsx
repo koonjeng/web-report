@@ -362,7 +362,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       };
 
       if (monthlyReportObj && monthlyReportObj.report.status !== 'empty') {
-        mergedData = { ...mergedData, ...monthlyReportObj.data };
+        const rDate = monthlyReportObj.data.report_date;
+        let isCorrectMonth = true;
+        if (rDate) {
+          const parts = rDate.split('-');
+          if (parts.length === 3 && parseInt(parts[1], 10) !== monthNum) {
+            isCorrectMonth = false;
+          }
+        }
+        if (isCorrectMonth) {
+          mergedData = { ...mergedData, ...monthlyReportObj.data };
+        }
       }
 
       catSubs.forEach((sub) => {
@@ -372,8 +382,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         mergedData.report_date = sub.report_date || mergedData.report_date;
       });
 
-      const hasData =
-        (monthlyReportObj && monthlyReportObj.report.status !== 'empty') || catSubs.length > 0;
+      const hasData = catSubs.length > 0 || (monthlyReportObj && monthlyReportObj.report.status !== 'empty');
 
       return {
         month: monthNum,
@@ -422,7 +431,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       };
 
       if (monthlyReportObj && monthlyReportObj.report.status !== 'empty') {
-        mergedData = { ...mergedData, ...monthlyReportObj.data };
+        const rDate = monthlyReportObj.data.report_date;
+        let isCorrectMonth = true;
+        if (rDate) {
+          const parts = rDate.split('-');
+          if (parts.length === 3 && parseInt(parts[1], 10) !== monthNum) {
+            isCorrectMonth = false;
+          }
+        }
+        if (isCorrectMonth) {
+          mergedData = { ...mergedData, ...monthlyReportObj.data };
+        }
       }
 
       catSubs.forEach((sub) => {
