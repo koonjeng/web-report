@@ -43,8 +43,17 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
 
   useEffect(() => {
     async function loadSubs() {
-      const subs = await getCategorySubmissions(selectedYear);
-      setCategorySubmissions(subs);
+      const gregorianYear = selectedYear > 2500 ? selectedYear - 543 : selectedYear;
+      const buddhistYear = selectedYear > 2500 ? selectedYear : selectedYear + 543;
+      
+      const subsCurrent = await getCategorySubmissions(selectedYear);
+      const subsGregorian = await getCategorySubmissions(gregorianYear);
+      const subsBuddhist = await getCategorySubmissions(buddhistYear);
+
+      // Merge unique by id
+      const map = new Map<string, CategorySubmission>();
+      [...subsCurrent, ...subsGregorian, ...subsBuddhist].forEach((s) => map.set(s.id, s));
+      setCategorySubmissions(Array.from(map.values()));
     }
     loadSubs();
   }, [selectedYear]);
