@@ -93,15 +93,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex flex-col min-h-0 overflow-y-auto">
         {/* Brand Header */}
         <div className="p-6 flex items-center justify-between border-b border-slate-700/60 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
-              <Zap className="w-6 h-6 text-slate-950 font-bold" />
-            </div>
-            <div className="overflow-hidden">
-              <h1 className="font-bold text-lg leading-tight tracking-wide text-slate-100 truncate">
-                TDC Utility
-              </h1>
-            </div>
+          <div className="overflow-hidden">
+            <h1 className="font-bold text-lg leading-tight tracking-wide text-slate-100 truncate">
+              TDC Utility
+            </h1>
           </div>
           {/* Close button on mobile */}
           <button
