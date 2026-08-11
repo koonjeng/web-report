@@ -631,7 +631,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       const dKeyComp = `${compYear}-${compMonthStr}-${dayStr}`;
 
       // Primary Month Entry (Merge all category submissions for this day)
-      const subsCurr = currentCategorySubmissions.filter((s) => s.report_date === dKeyCurr);
+      const subsCurr = currentCategorySubmissions.filter((s) => {
+        if (s.report_date === dKeyCurr) return true;
+        if (s.report_date) {
+          const parts = s.report_date.split('-');
+          if (parts.length === 3) {
+            const m = parseInt(parts[1], 10);
+            const d = parseInt(parts[2], 10);
+            return m === activeM && d === day;
+          }
+        }
+        return false;
+      });
       let dDataCurr: Partial<ReportData> = {};
       subsCurr.forEach((sub) => {
         dDataCurr = accumulateMerge(dDataCurr, sub.data);
@@ -645,7 +656,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       const biogasEffCurr = Number(dDataCurr.biogas_removal) || (h2sCurr > 0 ? Math.max(0, 100 - h2sCurr / 100) : 0);
 
       // Comparison Month Entry
-      const subsPrev = prevCategorySubmissions.filter((s) => s.report_date === dKeyComp);
+      const subsPrev = prevCategorySubmissions.filter((s) => {
+        if (s.report_date === dKeyComp) return true;
+        if (s.report_date) {
+          const parts = s.report_date.split('-');
+          if (parts.length === 3) {
+            const m = parseInt(parts[1], 10);
+            const d = parseInt(parts[2], 10);
+            return m === compStartMonth && d === day;
+          }
+        }
+        return false;
+      });
       let dDataPrev: Partial<ReportData> = {};
       subsPrev.forEach((sub) => {
         dDataPrev = accumulateMerge(dDataPrev, sub.data);
