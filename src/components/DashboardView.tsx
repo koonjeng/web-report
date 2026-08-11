@@ -531,6 +531,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     };
   }, [filteredMonthlyData, filteredSubmissions]);
 
+  // Filtered Comparison Category Submissions for Comparison Range
+  const compFilteredSubmissions = useMemo(() => {
+    const list = isComparing ? prevCategorySubmissions.concat(currentCategorySubmissions) : prevCategorySubmissions;
+    return list.filter((sub) => {
+      if (sub.report_date) {
+        if (compStartDate && sub.report_date < compStartDate) return false;
+        if (compEndDate && sub.report_date > compEndDate) return false;
+      } else if (sub.month) {
+        if (sub.month < compStartMonth || sub.month > compEndMonth) return false;
+      }
+      return true;
+    });
+  }, [prevCategorySubmissions, currentCategorySubmissions, compStartDate, compEndDate, compStartMonth, compEndMonth, isComparing]);
+
   // Aggregate Comparison Metrics Summary REACTIVE to Comparison Calendar Range
   const compMetricsSummary = useMemo(() => {
     let ytdProduction = 0;
@@ -540,17 +554,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     let totalSludgeTons = 0;
     let fuelOilLiterTotal = 0;
 
-    compFilteredMonthlyData.forEach((item) => {
-      if (item.hasData) {
-        const m = calculateMetrics(item.data);
+    if (compFilteredSubmissions.length > 0) {
+      compFilteredSubmissions.forEach((sub) => {
+        const m = calculateMetrics(sub.data);
         ytdProduction += m.totalProductionTons;
         ytdCost += m.totalCostBaht;
         totalSolarKwh += m.elecTotalSolarKwh;
         totalPeaKwh += m.elecTotalPeaKwh;
-        totalSludgeTons += item.data.sludge_tons || 0;
+        totalSludgeTons += Number(sub.data.sludge_tons || 0) + Number(sub.data.sludge_vac_tons || 0);
         fuelOilLiterTotal += m.fuelOilTotalLiter;
-      }
-    });
+      });
+    } else {
+      compFilteredMonthlyData.forEach((item) => {
+        if (item.hasData) {
+          const m = calculateMetrics(item.data);
+          ytdProduction += m.totalProductionTons;
+          ytdCost += m.totalCostBaht;
+          totalSolarKwh += m.elecTotalSolarKwh;
+          totalPeaKwh += m.elecTotalPeaKwh;
+          totalSludgeTons += item.data.sludge_tons || 0;
+          fuelOilLiterTotal += m.fuelOilTotalLiter;
+        }
+      });
+    }
 
     const costPerTon = ytdProduction > 0 ? ytdCost / ytdProduction : 0;
 
@@ -563,7 +589,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       totalSludgeTons,
       fuelOilLiterTotal,
     };
-  }, [compFilteredMonthlyData]);
+  }, [compFilteredMonthlyData, compFilteredSubmissions]);
 
   // Fuel Oil Liter Per Ton Finished Goods (Formula: Oil Liters / Production Tons)
   const oilPerTonFgVal = useMemo(() => {
