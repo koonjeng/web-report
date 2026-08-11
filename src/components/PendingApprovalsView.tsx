@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { FullMonthlyReportData, UserRole, CategorySubmission } from '@/lib/types';
 import { calculateMetrics, MONTH_NAMES_TH } from '@/lib/calculations';
-import { getCategorySubmissions, updateCategorySubmissionStatus } from '@/lib/supabase';
+import { getCategorySubmissions, updateCategorySubmissionStatus, isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { MaintenanceHistoryRecord, MaintenanceTask } from './MaintenanceView';
 import { DataEntryForm } from './DataEntryForm';
 
@@ -58,14 +58,35 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
     loadSubs();
   }, [selectedYear]);
 
-  const [maintRecords, setMaintRecords] = useState<MaintenanceHistoryRecord[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem('tdc_maintenance_history');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [];
-  });
+  const [maintRecords, setMaintRecords] = useState<MaintenanceHistoryRecord[]>([]);
+
+  useEffect(() => {
+    async function loadPMHistory() {
+      if (isSupabaseConfigured && supabase) {
+        const { data } = await supabase.from('maintenance_history').select('*').order('created_at', { ascending: false });
+        if (data) {
+          setMaintRecords(
+            data.map((h: any) => ({
+              id: h.id,
+              taskId: h.task_id,
+              equipment: h.equipment,
+              taskName: h.task_name,
+              doneDate: h.done_date,
+              reporterName: h.reporter_name,
+              status: h.status,
+              submittedAt: h.submitted_at || h.created_at,
+            }))
+          );
+          return;
+        }
+      }
+      try {
+        const saved = localStorage.getItem('tdc_maintenance_history');
+        if (saved) setMaintRecords(JSON.parse(saved));
+      } catch {}
+    }
+    loadPMHistory();
+  }, []);
 
   const pendingMaintRecords = useMemo(() => {
     return maintRecords.filter((m) => m.status === 'pending');
@@ -77,7 +98,7 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
 
   const totalPendingCount = pendingSubmissions.length + pendingMaintRecords.length;
 
-  const handleApproveMaintRecord = (record: MaintenanceHistoryRecord) => {
+  const handleApproveMaintRecord = async (record: MaintenanceHistoryRecord) => {
     // 1. Update status in history
     const updatedHistory = maintRecords.map((m) =>
       m.id === record.id ? { ...m, status: 'approved' as const } : m
@@ -85,28 +106,27 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
     setMaintRecords(updatedHistory);
     localStorage.setItem('tdc_maintenance_history', JSON.stringify(updatedHistory));
 
-    // 2. Update lastDoneDate in tasks
-    try {
-      const tasksSaved = localStorage.getItem('tdc_maintenance_tasks');
-      if (tasksSaved) {
-        const tasks: MaintenanceTask[] = JSON.parse(tasksSaved);
-        const updatedTasks = tasks.map((t) =>
-          t.id === record.taskId
-            ? { ...t, lastDoneDate: record.doneDate, reporterName: record.reporterName, status: 'approved' as const }
-            : t
-        );
-        localStorage.setItem('tdc_maintenance_tasks', JSON.stringify(updatedTasks));
-      }
-    } catch {}
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from('maintenance_history').update({ status: 'approved' }).eq('id', record.id);
+      await supabase.from('maintenance_tasks').update({
+        last_done_date: record.doneDate,
+        reporter_name: record.reporterName,
+        status: 'approved',
+      }).eq('id', record.taskId);
+    }
 
     triggerNotify(`อนุมัติการซ่อมบำรุง "${record.equipment}" เรียบร้อยแล้ว`);
     setTimeout(() => window.location.reload(), 1200);
   };
 
-  const handleRejectMaintRecord = (recordId: string) => {
+  const handleRejectMaintRecord = async (recordId: string) => {
     const updatedHistory = maintRecords.filter((m) => m.id !== recordId);
     setMaintRecords(updatedHistory);
     localStorage.setItem('tdc_maintenance_history', JSON.stringify(updatedHistory));
+
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from('maintenance_history').delete().eq('id', recordId);
+    }
     triggerNotify('ลบ/ตีกลับรายการซ่อมบำรุงเรียบร้อยแล้ว');
   };
 
