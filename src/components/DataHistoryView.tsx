@@ -818,8 +818,7 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
                   return (
                     <tr
                       key={item.id}
-                      onClick={() => onSelectMonth && onSelectMonth(item.month)}
-                      className="hover:bg-sky-50/50 transition-colors cursor-pointer"
+                      className="hover:bg-slate-50/80 transition-colors"
                     >
                       {/* DATE, REPORTER & APPROVER */}
                       <td className="p-3.5">
