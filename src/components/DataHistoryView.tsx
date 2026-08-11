@@ -425,8 +425,15 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
       }
     });
 
+    // Sort items by report_date descending (newest first)
+    items.sort((a, b) => {
+      const dateA = a.report_date || `${selectedYear}-${String(a.month).padStart(2, '0')}-01`;
+      const dateB = b.report_date || `${selectedYear}-${String(b.month).padStart(2, '0')}-01`;
+      return dateB.localeCompare(dateA);
+    });
+
     return items;
-  }, [reportsData, categorySubmissions]);
+  }, [reportsData, categorySubmissions, selectedYear]);
 
   // Helper to check category data content
   const hasCategoryContent = (data: Partial<ReportData>, catKey: string): boolean => {

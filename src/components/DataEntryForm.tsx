@@ -360,9 +360,21 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
       return;
     }
 
+    let targetYear = selectedYear;
+    let targetMonth = selectedMonth;
+    if (formData.report_date) {
+      const parts = formData.report_date.split('-');
+      if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (!isNaN(y)) targetYear = y;
+        if (!isNaN(m) && m >= 1 && m <= 12) targetMonth = m;
+      }
+    }
+
     saveCategorySubmission({
-      year: selectedYear,
-      month: selectedMonth,
+      year: targetYear,
+      month: targetMonth,
       report_date: formData.report_date || new Date().toISOString().split('T')[0],
       category_key: catKey as any,
       category_name: categoryName,
@@ -430,6 +442,18 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
       return;
     }
 
+    let targetYear = selectedYear;
+    let targetMonth = selectedMonth;
+    if (formData.report_date) {
+      const parts = formData.report_date.split('-');
+      if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (!isNaN(y)) targetYear = y;
+        if (!isNaN(m) && m >= 1 && m <= 12) targetMonth = m;
+      }
+    }
+
     filledCategories.forEach((cat) => {
       const catFields = getCategoryFields(cat.key);
       const catPatch: Partial<ReportData> = {
@@ -443,8 +467,8 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
       });
 
       saveCategorySubmission({
-        year: selectedYear,
-        month: selectedMonth,
+        year: targetYear,
+        month: targetMonth,
         report_date: formData.report_date || new Date().toISOString().split('T')[0],
         category_key: cat.key,
         category_name: cat.name,
