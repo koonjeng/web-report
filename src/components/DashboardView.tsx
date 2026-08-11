@@ -989,8 +989,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <span className="text-sm font-bold text-slate-500">Ton</span>
                 </div>
                 {isComparing && (
-                  <div className="text-[11px] font-bold text-sky-700 mt-0.5">
-                    เทียบ: {compMetricsSummary.totalSludgeTons.toLocaleString('th-TH')} Ton
+                  <div className="text-[11px] font-bold text-amber-700 mt-1 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 inline-flex items-center gap-1">
+                    <span>ช่วงเทียบ: <strong className="text-amber-900">{compMetricsSummary.totalSludgeTons.toLocaleString('th-TH')}</strong> Ton</span>
+                    {compMetricsSummary.totalSludgeTons > 0 && (
+                      <span className={`font-black ml-1 ${currentMetricsSummary.totalSludgeTons >= compMetricsSummary.totalSludgeTons ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        ({currentMetricsSummary.totalSludgeTons >= compMetricsSummary.totalSludgeTons ? '+' : ''}
+                        {(((currentMetricsSummary.totalSludgeTons - compMetricsSummary.totalSludgeTons) / compMetricsSummary.totalSludgeTons) * 100).toFixed(1)}%)
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -1010,8 +1016,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <span className="text-sm font-bold text-slate-500">L</span>
                 </div>
                 {isComparing && (
-                  <div className="text-[11px] font-bold text-sky-700 mt-0.5">
-                    เทียบ: {formatCompact(compMetricsSummary.fuelOilLiterTotal, 1)} L
+                  <div className="text-[11px] font-bold text-amber-700 mt-1 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 inline-flex items-center gap-1">
+                    <span>ช่วงเทียบ: <strong className="text-amber-900">{formatCompact(compMetricsSummary.fuelOilLiterTotal, 1)}</strong> L</span>
+                    {compMetricsSummary.fuelOilLiterTotal > 0 && (
+                      <span className={`font-black ml-1 ${currentMetricsSummary.fuelOilLiterTotal <= compMetricsSummary.fuelOilLiterTotal ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        ({currentMetricsSummary.fuelOilLiterTotal >= compMetricsSummary.fuelOilLiterTotal ? '+' : ''}
+                        {(((currentMetricsSummary.fuelOilLiterTotal - compMetricsSummary.fuelOilLiterTotal) / compMetricsSummary.fuelOilLiterTotal) * 100).toFixed(1)}%)
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -1035,8 +1047,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <span>Solar: {formatCompact(currentMetricsSummary.totalSolarKwh, 1)} Kwh</span>
                 </div>
                 {isComparing && (
-                  <div className="text-[11px] font-bold text-sky-700 mt-0.5">
-                    เทียบ: {formatCompact(compMetricsSummary.totalPeaKwh, 1)} Kwh
+                  <div className="text-[11px] font-bold text-amber-700 mt-1 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 inline-flex items-center gap-1">
+                    <span>ช่วงเทียบ: <strong className="text-amber-900">{formatCompact(compMetricsSummary.totalPeaKwh, 1)}</strong> Kwh</span>
+                    {compMetricsSummary.totalPeaKwh > 0 && (
+                      <span className={`font-black ml-1 ${currentMetricsSummary.totalPeaKwh <= compMetricsSummary.totalPeaKwh ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        ({currentMetricsSummary.totalPeaKwh >= compMetricsSummary.totalPeaKwh ? '+' : ''}
+                        {(((currentMetricsSummary.totalPeaKwh - compMetricsSummary.totalPeaKwh) / compMetricsSummary.totalPeaKwh) * 100).toFixed(1)}%)
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
