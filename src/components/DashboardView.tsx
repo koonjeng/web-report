@@ -267,19 +267,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [currentCategorySubmissions, setCurrentCategorySubmissions] = useState<CategorySubmission[]>([]);
   const [prevCategorySubmissions, setPrevCategorySubmissions] = useState<CategorySubmission[]>([]);
 
-  const targetCompYear = useMemo(() => {
+  const compYear = useMemo(() => {
+    if (isComparing && compStartDate) {
+      const parts = compStartDate.split('-');
+      if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        if (!isNaN(y)) return y;
+      }
+    }
     return chartMode === 'yoy' ? yoyCompYear : selectedYear - 1;
-  }, [chartMode, yoyCompYear, selectedYear]);
+  }, [isComparing, compStartDate, chartMode, yoyCompYear, selectedYear]);
 
   useEffect(() => {
     async function loadDashSubs() {
       const curr = await getCategorySubmissions(selectedYear);
-      const prev = await getCategorySubmissions(targetCompYear);
+      const prev = compYear === selectedYear ? curr : await getCategorySubmissions(compYear);
       setCurrentCategorySubmissions(curr);
       setPrevCategorySubmissions(prev);
     }
     loadDashSubs();
-  }, [selectedYear, targetCompYear]);
+  }, [selectedYear, compYear]);
 
   // Derived Month Range Bounds from Selected Dates
   const startMonth = useMemo(() => {
