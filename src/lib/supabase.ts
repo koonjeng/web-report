@@ -310,13 +310,16 @@ export async function signInUser(email: string, password: string): Promise<{ ema
 export async function fetchReportsData(year: number): Promise<FullMonthlyReportData[]> {
   if (isSupabaseConfigured && supabase) {
     try {
+      const gregorianYear = year > 2500 ? year - 543 : year;
+      const buddhistYear = year > 2500 ? year : year + 543;
+
       const { data: reports, error } = await supabase
         .from('monthly_reports')
         .select(`
           id, year, month, status, reject_reason,
           report_data (*)
         `)
-        .eq('year', year);
+        .in('year', Array.from(new Set([year, gregorianYear, buddhistYear])));
 
       if (!error && reports) {
         return Array.from({ length: 12 }, (_, i) => {
@@ -499,10 +502,13 @@ export function saveLocalReport(
 export async function getCategorySubmissions(year: number): Promise<CategorySubmission[]> {
   if (isSupabaseConfigured && supabase) {
     try {
+      const gregorianYear = year > 2500 ? year - 543 : year;
+      const buddhistYear = year > 2500 ? year : year + 543;
+
       const { data, error } = await supabase
         .from('category_submissions')
         .select('*')
-        .eq('year', year)
+        .in('year', Array.from(new Set([year, gregorianYear, buddhistYear])))
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -521,9 +527,10 @@ export async function saveCategorySubmission(
   if (isSupabaseConfigured && supabase) {
     try {
       const subId = `sub-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+      const normalizedYear = submission.year > 2500 ? submission.year - 543 : submission.year;
       const { error } = await supabase.from('category_submissions').insert({
         id: subId,
-        year: submission.year,
+        year: normalizedYear,
         month: submission.month,
         report_date: submission.report_date,
         category_key: submission.category_key,
