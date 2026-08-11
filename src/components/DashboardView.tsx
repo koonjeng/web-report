@@ -121,6 +121,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [startDate, setStartDate] = useState<string>(`${selectedYear}-01-01`);
   const [endDate, setEndDate] = useState<string>(`${selectedYear}-12-31`);
 
+  useEffect(() => {
+    setStartDate(`${selectedYear}-01-01`);
+    setEndDate(`${selectedYear}-12-31`);
+    setCompStartDate(`${selectedYear - 1}-01-01`);
+    setCompEndDate(`${selectedYear - 1}-12-31`);
+  }, [selectedYear]);
+
   // Date Comparison State
   const [isComparing, setIsComparing] = useState<boolean>(false);
   const [compStartDate, setCompStartDate] = useState<string>(`${selectedYear - 1}-01-01`);
@@ -615,8 +622,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       items.push({
         dayLabel: `${day}`,
-        sludgeTons: Number(dDataCurr.sludge_tons || 0),
-        sludgePrev: Number(dDataPrev.sludge_tons || 0),
+        sludgeTons: Number(dDataCurr.sludge_tons || 0) + Number(dDataCurr.sludge_vac_tons || 0),
+        sludgePrev: Number(dDataPrev.sludge_tons || 0) + Number(dDataPrev.sludge_vac_tons || 0),
         oilLiters: mCurr.fuelOilTotalLiter,
         oilPrev: mPrev.fuelOilTotalLiter,
         elecKwh: mCurr.elecTotalPeaKwh + mCurr.elecTotalSolarKwh,
@@ -646,8 +653,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
     return filteredMonthlyData.map((item) => {
       const pItem = prevMergedMonthlyData.find((p) => p.month === item.month);
-      const val = item.hasData ? Number(item.data.sludge_tons || 0) : 0;
-      const prevVal = pItem?.hasData ? Number(pItem.data.sludge_tons || 0) : 0;
+      const val = item.hasData ? Number(item.data.sludge_tons || 0) + Number(item.data.sludge_vac_tons || 0) : 0;
+      const prevVal = pItem?.hasData ? Number(pItem.data.sludge_tons || 0) + Number(pItem.data.sludge_vac_tons || 0) : 0;
       return {
         month: MONTH_SHORT_TH[item.month - 1],
         tons: val,
