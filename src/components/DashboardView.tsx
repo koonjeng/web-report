@@ -436,7 +436,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     });
   }, [currentCategorySubmissions, startDate, endDate, startMonth, endMonth]);
 
-  // Aggregate Metrics Summary REACTIVE to Selected Calendar Range
+  // Aggregate Metrics Summary REACTIVE to Selected Calendar Range & Daily Submissions
   const currentMetricsSummary = useMemo(() => {
     let ytdProduction = 0;
     let ytdCost = 0;
@@ -446,18 +446,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     let totalSludgeTons = 0;
     let fuelOilLiterTotal = 0;
 
-    filteredMonthlyData.forEach((item) => {
-      if (item.hasData) {
-        const m = calculateMetrics(item.data);
+    if (filteredSubmissions.length > 0) {
+      filteredSubmissions.forEach((sub) => {
+        const m = calculateMetrics(sub.data);
         ytdProduction += m.totalProductionTons;
         ytdCost += m.totalCostBaht;
-        totalBiogasM3 += m.gasTotalM3 || item.data.renewable_biogas_m3 || 0;
+        totalBiogasM3 += m.gasTotalM3 || sub.data.renewable_biogas_m3 || 0;
         totalSolarKwh += m.elecTotalSolarKwh;
         totalPeaKwh += m.elecTotalPeaKwh;
-        totalSludgeTons += item.data.sludge_tons || 0;
+        totalSludgeTons += Number(sub.data.sludge_tons || 0) + Number(sub.data.sludge_vac_tons || 0);
         fuelOilLiterTotal += m.fuelOilTotalLiter;
-      }
-    });
+      });
+    } else {
+      filteredMonthlyData.forEach((item) => {
+        if (item.hasData) {
+          const m = calculateMetrics(item.data);
+          ytdProduction += m.totalProductionTons;
+          ytdCost += m.totalCostBaht;
+          totalBiogasM3 += m.gasTotalM3 || item.data.renewable_biogas_m3 || 0;
+          totalSolarKwh += m.elecTotalSolarKwh;
+          totalPeaKwh += m.elecTotalPeaKwh;
+          totalSludgeTons += item.data.sludge_tons || 0;
+          fuelOilLiterTotal += m.fuelOilTotalLiter;
+        }
+      });
+    }
 
     const costPerTon = ytdProduction > 0 ? ytdCost / ytdProduction : 0;
 
@@ -471,7 +484,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       totalSludgeTons,
       fuelOilLiterTotal,
     };
-  }, [filteredMonthlyData]);
+  }, [filteredMonthlyData, filteredSubmissions]);
 
   // Aggregate Comparison Metrics Summary REACTIVE to Comparison Calendar Range
   const compMetricsSummary = useMemo(() => {
@@ -572,9 +585,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       const dKeyCurr = `${selectedYear}-${targetMonthStr}-${dayStr}`;
       const dKeyComp = `${compYear}-${compMonthStr}-${dayStr}`;
 
-      // Primary Month Entry
-      const subCurr = currentCategorySubmissions.find((s) => s.report_date === dKeyCurr);
-      const dDataCurr = subCurr ? subCurr.data : {};
+      // Primary Month Entry (Merge all category submissions for this day)
+      const subsCurr = currentCategorySubmissions.filter((s) => s.report_date === dKeyCurr);
+      let dDataCurr: Partial<ReportData> = {};
+      subsCurr.forEach((sub) => {
+        dDataCurr = accumulateMerge(dDataCurr, sub.data);
+      });
       const mCurr = calculateMetrics(dDataCurr);
 
       const codInCurr = Number(dDataCurr.wwt_cod_native) || Number(dDataCurr.wwt_cod_loading) || 0;
@@ -584,10 +600,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       const biogasEffCurr = Number(dDataCurr.biogas_removal) || (h2sCurr > 0 ? Math.max(0, 100 - h2sCurr / 100) : 0);
 
       // Comparison Month Entry
-      const subPrev =
-        prevCategorySubmissions.find((s) => s.report_date === dKeyComp) ||
-        currentCategorySubmissions.find((s) => s.report_date === dKeyComp);
-      const dDataPrev = subPrev ? subPrev.data : {};
+      const subsPrev = prevCategorySubmissions.filter((s) => s.report_date === dKeyComp);
+      let dDataPrev: Partial<ReportData> = {};
+      subsPrev.forEach((sub) => {
+        dDataPrev = accumulateMerge(dDataPrev, sub.data);
+      });
       const mPrev = calculateMetrics(dDataPrev);
 
       const codInPrev = Number(dDataPrev.wwt_cod_native) || Number(dDataPrev.wwt_cod_loading) || 0;
