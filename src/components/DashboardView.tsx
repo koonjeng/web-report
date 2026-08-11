@@ -919,17 +919,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
 
             {/* Primary Date Range Calendar Picker (DD/MM/YYYY FORMATTED) */}
-            <div className="flex items-center gap-2 bg-slate-900 text-white p-2.5 rounded-xl border border-slate-800 text-xs font-bold shadow-md">
-              <Calendar className="w-4 h-4 text-sky-400 shrink-0" />
-              <span className="text-slate-300 font-medium">ช่วงวันที่หลัก:</span>
-              <DatePickerTH value={startDate} onChange={setStartDate} className="bg-slate-800 text-white border-slate-700" />
-              <span className="text-slate-500">ถึง</span>
-              <DatePickerTH value={endDate} onChange={setEndDate} className="bg-slate-800 text-white border-slate-700" />
+            <div className="flex items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200 text-xs font-bold">
+              <Calendar className="w-4 h-4 text-sky-600 shrink-0" />
+              <span className="text-slate-500">ช่วงวัน:</span>
+              <DatePickerTH value={startDate} onChange={setStartDate} />
+              <span className="text-slate-400">-</span>
+              <DatePickerTH value={endDate} onChange={setEndDate} />
 
               <button
                 onClick={handleResetDates}
                 title="แสดงข้อมูลทั้งปี"
-                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors ml-1 cursor-pointer"
+                className="p-1 text-slate-400 hover:text-slate-700 transition-colors ml-1 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -938,13 +938,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Compare Toggle Button */}
             <button
               onClick={handleToggleCompare}
-              className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer shadow-md ${isComparing
-                ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-400 ring-2 ring-amber-400/30'
-                : 'bg-white text-slate-800 border border-slate-300 hover:bg-slate-100 hover:border-slate-400'
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${isComparing
+                ? 'bg-sky-600 text-white border border-sky-500 shadow-sky-500/20'
+                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
                 }`}
             >
-              <ArrowRightLeft className="w-4 h-4" />
-              <span>{isComparing ? 'ปิดโหมดเปรียบเทียบ' : 'เทียบกับช่วงเวลาอื่น'}</span>
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span>{isComparing ? 'ยกเลิกการเปรียบเทียบ' : 'เปิดโหมดเปรียบเทียบ'}</span>
             </button>
           </div>
         </div>
