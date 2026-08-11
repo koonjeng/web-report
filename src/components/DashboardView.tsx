@@ -335,7 +335,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return Array.from({ length: 12 }, (_, idx) => {
       const monthNum = idx + 1;
       const monthlyReportObj = reportsData.find((r) => r.report.month === monthNum);
-      const catSubs = currentCategorySubmissions.filter((c) => c.month === monthNum);
+      const catSubs = currentCategorySubmissions.filter((c) => {
+        if (c.month === monthNum) return true;
+        if (c.report_date) {
+          const parts = c.report_date.split('-');
+          if (parts.length === 3) {
+            const m = parseInt(parts[1], 10);
+            return m === monthNum;
+          }
+        }
+        return false;
+      });
 
       let mergedData: Partial<ReportData> = {
         report_id: `m_${monthNum}`,
@@ -385,7 +395,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return Array.from({ length: 12 }, (_, idx) => {
       const monthNum = idx + 1;
       const monthlyReportObj = prevReportsData.find((r) => r.report.month === monthNum);
-      const catSubs = prevCategorySubmissions.filter((c) => c.month === monthNum);
+      const catSubs = prevCategorySubmissions.filter((c) => {
+        if (c.month === monthNum) return true;
+        if (c.report_date) {
+          const parts = c.report_date.split('-');
+          if (parts.length === 3) {
+            const m = parseInt(parts[1], 10);
+            return m === monthNum;
+          }
+        }
+        return false;
+      });
 
       let mergedData: Partial<ReportData> = {
         report_id: `m_prev_${monthNum}`,
