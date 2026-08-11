@@ -919,17 +919,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
 
             {/* Primary Date Range Calendar Picker (DD/MM/YYYY FORMATTED) */}
-            <div className="flex items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200 text-xs font-bold">
-              <Calendar className="w-4 h-4 text-sky-600 shrink-0" />
-              <span className="text-slate-500">ช่วงวัน:</span>
-              <DatePickerTH value={startDate} onChange={setStartDate} />
-              <span className="text-slate-400">-</span>
-              <DatePickerTH value={endDate} onChange={setEndDate} />
+            <div className="flex items-center gap-2 bg-slate-900 text-white p-2.5 rounded-xl border border-slate-800 text-xs font-bold shadow-md">
+              <Calendar className="w-4 h-4 text-sky-400 shrink-0" />
+              <span className="text-slate-300 font-medium">ช่วงวันที่หลัก:</span>
+              <DatePickerTH value={startDate} onChange={setStartDate} className="bg-slate-800 text-white border-slate-700" />
+              <span className="text-slate-500">ถึง</span>
+              <DatePickerTH value={endDate} onChange={setEndDate} className="bg-slate-800 text-white border-slate-700" />
 
               <button
                 onClick={handleResetDates}
                 title="แสดงข้อมูลทั้งปี"
-                className="p-1 text-slate-400 hover:text-slate-700 transition-colors ml-1 cursor-pointer"
+                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors ml-1 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -938,31 +938,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Compare Toggle Button */}
             <button
               onClick={handleToggleCompare}
-              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${isComparing
-                ? 'bg-sky-600 text-white border border-sky-500 shadow-sky-500/20'
-                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+              className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer shadow-md ${isComparing
+                ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-400 ring-2 ring-amber-400/30'
+                : 'bg-white text-slate-800 border border-slate-300 hover:bg-slate-100 hover:border-slate-400'
                 }`}
             >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-              <span>{isComparing ? 'ยกเลิกการเปรียบเทียบ' : 'เปิดโหมดเปรียบเทียบ'}</span>
+              <ArrowRightLeft className="w-4 h-4" />
+              <span>{isComparing ? 'ปิดโหมดเปรียบเทียบ' : 'เทียบกับช่วงเวลาอื่น'}</span>
             </button>
           </div>
         </div>
 
         {/* COMPARISON DATE PICKER BAR (IF COMPARISON MODE IS OPEN) */}
         {isComparing && (
-          <div className="bg-sky-50/80 p-3.5 rounded-xl border border-sky-200 flex flex-wrap items-center justify-between gap-4 text-xs font-bold text-slate-700 animate-fadeIn">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-sky-700 shrink-0" />
-              <span className="text-sky-900 font-extrabold">ช่วงวันสำหรับเปรียบเทียบ:</span>
-              <DatePickerTH value={compStartDate} onChange={setCompStartDate} />
-              <span className="text-slate-400">-</span>
-              <DatePickerTH value={compEndDate} onChange={setCompEndDate} />
+          <div className="bg-gradient-to-r from-amber-500/10 via-amber-50 to-amber-500/5 p-4 rounded-xl border-2 border-amber-300/80 flex flex-wrap items-center justify-between gap-4 text-xs font-bold text-slate-800 shadow-sm animate-fadeIn">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-xs">
+                VS
+              </div>
+              <span className="text-amber-950 font-black text-xs uppercase tracking-wide">ช่วงวันสำหรับเปรียบเทียบ:</span>
+              <DatePickerTH value={compStartDate} onChange={setCompStartDate} className="bg-amber-100/80 border-amber-300 text-amber-950 font-black" />
+              <span className="text-amber-700 font-extrabold">ถึง</span>
+              <DatePickerTH value={compEndDate} onChange={setCompEndDate} className="bg-amber-100/80 border-amber-300 text-amber-950 font-black" />
             </div>
 
-            <span className="text-sky-800 text-[11px] font-semibold">
-              เปรียบเทียบสถิติช่วงแรก ({formatDateTH(startDate)} ~ {formatDateTH(endDate)}) กับช่วงเปรียบเทียบ ({formatDateTH(compStartDate)} ~ {formatDateTH(compEndDate)})
-            </span>
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-700 bg-white/80 px-3 py-1.5 rounded-lg border border-amber-200 shadow-2xs">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+              <span>{formatDateTH(startDate)} - {formatDateTH(endDate)}</span>
+              <span className="text-amber-600 font-black mx-1">เทียบกับ</span>
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span>{formatDateTH(compStartDate)} - {formatDateTH(compEndDate)}</span>
+            </div>
           </div>
         )}
       </div>
