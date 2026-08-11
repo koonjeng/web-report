@@ -252,6 +252,10 @@ export async function changeUserPassword(currentPassword: string, newPassword: s
 
 // Real Auth & Role lookup function
 export async function signInUser(email: string, password: string): Promise<{ email: string; role: UserRole } | { error: string }> {
+  if (!email || !password) {
+    return { error: 'กรุณากรอกอีเมลและรหัสผ่าน' };
+  }
+
   if (email.toLowerCase() === 'koonjeng.pongpisut@gmail.com') {
     return { error: 'บัญชีนี้ถูกยกเลิกการใช้งานแล้ว' };
   }
@@ -280,30 +284,16 @@ export async function signInUser(email: string, password: string): Promise<{ ema
         return { email: authData.user.email || email, role: userRole };
       }
 
-      // If Supabase Auth failed (e.g. user exists only in profiles table or local storage), fallback to profiles check
+      if (authError) {
+        return { error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง' };
+      }
     } catch (err: any) {
-      console.warn('Supabase login failed, using direct profile lookup:', err);
+      console.warn('Supabase login error:', err);
+      return { error: 'เกิดข้อผิดพลาดในการเชื่อมต่อเพื่อเข้าสู่ระบบ' };
     }
   }
 
-  if (!email || !password) {
-    return { error: 'กรุณากรอกอีเมลและรหัสผ่าน' };
-  }
-
-  if (password.length < 4) {
-    return { error: 'รหัสผ่านต้องมีความยาวอย่างน้อย 4 ตัวอักษร' };
-  }
-
-  const profiles = getLocalProfiles();
-  const matched = profiles.find((p) => p.email.toLowerCase() === email.toLowerCase());
-
-  let autoRole: UserRole = matched ? matched.role : 'approver';
-  const lowerEmail = email.toLowerCase();
-  if (lowerEmail.includes('admin') || lowerEmail === 'admin@tdc.com') {
-    autoRole = 'admin';
-  }
-
-  return { email, role: autoRole };
+  return { error: 'ไม่พบการเชื่อมต่อกับระบบยืนยันตัวตน Supabase' };
 }
 
 // Fetch monthly reports - Direct Supabase Only
