@@ -477,12 +477,14 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
   // Filter logic
   const filteredReports = useMemo(() => {
     return allDisplayItems.filter((item) => {
-      // Must match selected category
-      const isCatMatch =
-        item.category_key === selectedCategory ||
-        hasCategoryContent(item.data, selectedCategory);
+      // Must match selected category (or 'all')
+      if (selectedCategory !== 'all') {
+        const isCatMatch =
+          item.category_key === selectedCategory ||
+          hasCategoryContent(item.data, selectedCategory);
 
-      if (!isCatMatch) return false;
+        if (!isCatMatch) return false;
+      }
 
       // Date range filter (Start Date & End Date)
       const reportDate = item.report_date || '';
@@ -573,7 +575,20 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 pb-2">
           เลือกหมวดหมู่ที่ต้องการดูข้อมูล (Select Category)
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
+          <button
+            onClick={() => {
+              setSelectedCategory('all');
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${selectedCategory === 'all'
+                ? 'bg-slate-900 text-white shadow-md'
+                : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+              }`}
+          >
+            <Layers className="w-4 h-4 text-sky-400" />
+            <span>ทุกหมวดหมู่ (All)</span>
+          </button>
 
           <button
             onClick={() => {
@@ -758,6 +773,13 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
                 <th className="p-3.5">สถานะ</th>
 
                 {/* DYNAMIC CATEGORY COLUMNS */}
+                {selectedCategory === 'all' && (
+                  <>
+                    <th className="p-3.5 bg-slate-800/80 text-sky-300">หมวดหมู่</th>
+                    <th className="p-3.5 bg-slate-800/80 text-sky-300">สรุปรายการบันทึก</th>
+                  </>
+                )}
+
                 {selectedCategory === 'cat1' && (
                   <>
                     <th className="p-3.5 bg-slate-800/80 text-sky-300">ขนตะกอน (ตัน)</th>
@@ -814,6 +836,13 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
                   const metrics = calculateMetrics(item.data);
                   const st = item.status;
                   const dateStr = item.report_date ? item.report_date.split('-').reverse().join('/') : '';
+                  const catLabel =
+                    item.category_key === 'cat1' ? '1. ตะกอน (Sludge)' :
+                    item.category_key === 'cat2' ? '2. การผลิต (Production)' :
+                    item.category_key === 'cat3' ? '3. เชื้อเพลิง (Fuel)' :
+                    item.category_key === 'cat4' ? '4. ไฟฟ้า & โซลาร์' :
+                    item.category_key === 'cat5' ? '5. WWT & Biogas' :
+                    item.category_key === 'cat6' ? '6. สารเคมี (Chemical)' : 'รายงานประจำเดือน';
 
                   return (
                     <tr
@@ -862,6 +891,23 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
                           </span>
                         )}
                       </td>
+
+                      {/* ALL CATEGORIES */}
+                      {selectedCategory === 'all' && (
+                        <>
+                          <td className="p-3.5 font-extrabold text-sky-800">
+                            {catLabel}
+                          </td>
+                          <td className="p-3.5 font-bold text-slate-800">
+                            {item.data.sludge_tons ? `${item.data.sludge_tons} ตัน (${metrics.sludgeGrandTotalBaht.toLocaleString('th-TH')} บาท)` :
+                             metrics.totalProductionTons ? `ผลผลิตรวม ${metrics.totalProductionTons.toLocaleString('th-TH')} ตัน` :
+                             metrics.fuelOilTotalLiter ? `น้ำมันเตา ${metrics.fuelOilTotalLiter.toLocaleString('th-TH')} ลิตร` :
+                             metrics.elecGrandTotalKwh ? `ไฟฟ้ารวม ${metrics.elecGrandTotalKwh.toLocaleString('th-TH')} kWh` :
+                             item.data.biogas_flow_feed_mix2 ? `Biogas Flow ${item.data.biogas_flow_feed_mix2}` :
+                             'บันทึกข้อมูลเรียบร้อย'}
+                          </td>
+                        </>
+                      )}
 
                       {/* CATEGORY 1: SLUDGE */}
                       {selectedCategory === 'cat1' && (
