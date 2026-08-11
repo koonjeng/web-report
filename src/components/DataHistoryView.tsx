@@ -836,13 +836,26 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
                   const metrics = calculateMetrics(item.data);
                   const st = item.status;
                   const dateStr = item.report_date ? item.report_date.split('-').reverse().join('/') : '';
+                  const detectCategoryKey = (itemObj: typeof item) => {
+                    if (itemObj.category_key) return itemObj.category_key;
+                    const d = itemObj.data;
+                    if (d.sludge_tons || d.sludge_trips || d.sludge_removal_desc || d.sludge_vac_tons) return 'cat1';
+                    if (d.production_ms1 || d.production_ms2 || d.production_ms3 || d.production_total_ms) return 'cat2';
+                    if (d.fuel_oil_a_ms1_liter || d.fuel_oil_a_ms2_liter || d.fuel_oil_a_ms3_liter || d.gas_ms1_m3 || d.gas_ms2_m3) return 'cat3';
+                    if (d.elec_meter1_ms1_ms3_tf || d.elec_meter2_utl || d.solar_meter1_ms2) return 'cat4';
+                    if (d.wwt_cod_native || d.wwt_codt_mix1 || d.biogas_flow_feed_mix2) return 'cat5';
+                    if (d.chem_lime_usage || d.chem_polymer_usage || d.chem_odor_usage) return 'cat6';
+                    return 'monthly';
+                  };
+
+                  const actualCatKey = detectCategoryKey(item);
                   const catLabel =
-                    item.category_key === 'cat1' ? '1. ตะกอน (Sludge)' :
-                    item.category_key === 'cat2' ? '2. การผลิต (Production)' :
-                    item.category_key === 'cat3' ? '3. เชื้อเพลิง (Fuel)' :
-                    item.category_key === 'cat4' ? '4. ไฟฟ้า & โซลาร์' :
-                    item.category_key === 'cat5' ? '5. WWT & Biogas' :
-                    item.category_key === 'cat6' ? '6. สารเคมี (Chemical)' : 'รายงานประจำเดือน';
+                    actualCatKey === 'cat1' ? '1. ตะกอน (Sludge)' :
+                    actualCatKey === 'cat2' ? '2. การผลิต (Production)' :
+                    actualCatKey === 'cat3' ? '3. เชื้อเพลิง (Fuel)' :
+                    actualCatKey === 'cat4' ? '4. ไฟฟ้า & โซลาร์' :
+                    actualCatKey === 'cat5' ? '5. WWT & Biogas' :
+                    actualCatKey === 'cat6' ? '6. สารเคมี (Chemical)' : 'รายงานประจำเดือน';
 
                   return (
                     <tr
