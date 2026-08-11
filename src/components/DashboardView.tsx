@@ -336,7 +336,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       const monthNum = idx + 1;
       const monthlyReportObj = reportsData.find((r) => r.report.month === monthNum);
       const catSubs = currentCategorySubmissions.filter((c) => {
-        if (c.month === monthNum) return true;
         if (c.report_date) {
           const parts = c.report_date.split('-');
           if (parts.length === 3) {
@@ -344,7 +343,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             return m === monthNum;
           }
         }
-        return false;
+        return c.month === monthNum;
       });
 
       let mergedData: Partial<ReportData> = {
