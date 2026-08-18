@@ -18,6 +18,7 @@ import {
   Wrench,
   ShieldAlert,
   FileText,
+  Map,
 } from 'lucide-react';
 import { UserRole, FullMonthlyReportData } from '@/lib/types';
 import { getCategorySubmissions } from '@/lib/supabase';
@@ -57,7 +58,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   if (hasRole) {
     menuItems.push({ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null });
+    menuItems.push({ id: 'overview', label: 'Overview', icon: Map, badge: null });
     menuItems.push({ id: 'energy-report', label: 'A4 Report', icon: FileText, badge: null });
+  } else {
+    menuItems.push({ id: 'overview', label: 'Overview', icon: Map, badge: null });
   }
   menuItems.push({ id: 'data-entry', label: 'Daily Report', icon: FileSpreadsheet, badge: null });
   menuItems.push({ id: 'maintenance', label: 'PM', icon: Wrench, badge: null });

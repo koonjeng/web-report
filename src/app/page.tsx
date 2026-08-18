@@ -14,6 +14,7 @@ import { DataHistoryView } from '@/components/DataHistoryView';
 import { MaintenanceView } from '@/components/MaintenanceView';
 import { TroubleshootingView } from '@/components/TroubleshootingView';
 import { EnergyReportView } from '@/components/EnergyReportView';
+import { OverviewView } from '@/components/OverviewView';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { UserRole, FullMonthlyReportData, ReportData } from '@/lib/types';
 import { fetchReportsData, saveReportData, addAuditLog } from '@/lib/supabase';
@@ -177,6 +178,7 @@ export default function Home() {
 
   const getTitle = () => {
     if (activeTab === 'dashboard') return 'แดชบอร์ดแผนกพลังงาน';
+    if (activeTab === 'overview') return 'ภาพรวมผังพื้นที่ระบบบำบัด (Plant System Overview)';
     if (activeTab === 'data-entry') return 'ลงข้อมูลรายวัน';
     if (activeTab === 'energy-report') return 'รายงานพลังงานองค์รวม (Energy Report)';
     if (activeTab === 'maintenance') return 'แผนงานและประวัติซ่อมบำรุง (Maintenance PM)';
@@ -228,6 +230,8 @@ export default function Home() {
               </div>
             )
           )}
+
+          {activeTab === 'overview' && <OverviewView />}
 
           {activeTab === 'data-entry' && (
             <DataEntryForm
