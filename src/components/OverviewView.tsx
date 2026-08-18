@@ -309,6 +309,45 @@ export const OverviewView: React.FC = () => {
         </button>
       </div>
 
+      {/* TOP 3 SUMMARY KPI CARDS MATCHING EXACT USER SCREENSHOT */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card 1: น้ำเข้าระบบบำบัด */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition-all">
+          <div className="text-xs font-bold text-slate-600">น้ำเข้าระบบบำบัด</div>
+          <div className="text-2xl font-black tracking-wider text-slate-400 flex items-baseline gap-2">
+            <span>—</span>
+            <span className="text-sm font-bold text-slate-500">m³/วัน</span>
+          </div>
+          <div className="text-[11px] font-semibold text-slate-400">
+            Inflow วันนี้
+          </div>
+        </div>
+
+        {/* Card 2: ก๊าซชีวภาพผลิตได้ */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition-all">
+          <div className="text-xs font-bold text-slate-600">ก๊าซชีวภาพผลิตได้</div>
+          <div className="text-2xl font-black tracking-wider text-slate-400 flex items-baseline gap-2">
+            <span>—</span>
+            <span className="text-sm font-bold text-slate-500">m³/วัน</span>
+          </div>
+          <div className="text-[11px] font-semibold text-slate-400">
+            Biogas · บ่อคลุมผ้า
+          </div>
+        </div>
+
+        {/* Card 3: COD น้ำทิ้ง (จุดระบาย) */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition-all">
+          <div className="text-xs font-bold text-slate-600">COD น้ำทิ้ง (จุดระบาย)</div>
+          <div className="text-2xl font-black tracking-wider text-slate-400 flex items-baseline gap-2">
+            <span>—</span>
+            <span className="text-sm font-bold text-slate-500">mg/L</span>
+          </div>
+          <div className="text-[11px] font-semibold text-slate-400">
+            มาตรฐาน ≤ 120 mg/L
+          </div>
+        </div>
+      </div>
+
       {/* Main Container: Interactive Map View & Details Info Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: High-Res Aerial Map Image with Name Badges */}
