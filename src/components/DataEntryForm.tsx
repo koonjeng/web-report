@@ -306,6 +306,13 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
     }));
   };
 
+  const handleMultiInputChange = (patch: Partial<ReportData>) => {
+    setFormData((prev) => ({
+      ...prev,
+      ...patch,
+    }));
+  };
+
   const isElevatedUser = Boolean(
     currentUser && (currentUser.role === 'admin' || currentUser.role === 'approver')
   );
@@ -1108,7 +1115,17 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
                   type="number"
                   disabled={isFormLocked}
                   value={formData.fuel_oil_a_ms1_liter || ''}
-                  onChange={(e) => handleInputChange('fuel_oil_a_ms1_liter', Number(e.target.value))}
+                  onChange={(e) => {
+                    const ms1 = Number(e.target.value);
+                    const ms2 = Number(formData.fuel_oil_a_ms2_liter) || 0;
+                    const ms3 = Number(formData.fuel_oil_a_ms3_liter) || 0;
+                    const newTotalLiters = ms1 + ms2 + ms3;
+                    const price = Number(formData.fuel_oil_price_per_liter) || 0;
+                    handleMultiInputChange({
+                      fuel_oil_a_ms1_liter: ms1,
+                      fuel_oil_a_baht: Math.round(newTotalLiters * price * 100) / 100,
+                    });
+                  }}
                   placeholder="0.00"
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold text-slate-900 disabled:opacity-60"
                 />
@@ -1120,7 +1137,17 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
                   type="number"
                   disabled={isFormLocked}
                   value={formData.fuel_oil_a_ms2_liter || ''}
-                  onChange={(e) => handleInputChange('fuel_oil_a_ms2_liter', Number(e.target.value))}
+                  onChange={(e) => {
+                    const ms1 = Number(formData.fuel_oil_a_ms1_liter) || 0;
+                    const ms2 = Number(e.target.value);
+                    const ms3 = Number(formData.fuel_oil_a_ms3_liter) || 0;
+                    const newTotalLiters = ms1 + ms2 + ms3;
+                    const price = Number(formData.fuel_oil_price_per_liter) || 0;
+                    handleMultiInputChange({
+                      fuel_oil_a_ms2_liter: ms2,
+                      fuel_oil_a_baht: Math.round(newTotalLiters * price * 100) / 100,
+                    });
+                  }}
                   placeholder="0.00"
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold text-slate-900 disabled:opacity-60"
                 />
@@ -1132,31 +1159,55 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
                   type="number"
                   disabled={isFormLocked}
                   value={formData.fuel_oil_a_ms3_liter || ''}
-                  onChange={(e) => handleInputChange('fuel_oil_a_ms3_liter', Number(e.target.value))}
+                  onChange={(e) => {
+                    const ms1 = Number(formData.fuel_oil_a_ms1_liter) || 0;
+                    const ms2 = Number(formData.fuel_oil_a_ms2_liter) || 0;
+                    const ms3 = Number(e.target.value);
+                    const newTotalLiters = ms1 + ms2 + ms3;
+                    const price = Number(formData.fuel_oil_price_per_liter) || 0;
+                    handleMultiInputChange({
+                      fuel_oil_a_ms3_liter: ms3,
+                      fuel_oil_a_baht: Math.round(newTotalLiters * price * 100) / 100,
+                    });
+                  }}
                   placeholder="0.00"
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold text-slate-900 disabled:opacity-60"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-orange-100/70 p-3 rounded-xl border border-orange-200 flex items-center justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-orange-100/70 p-3 rounded-xl border border-orange-200 flex flex-col justify-between">
                 <span className="text-xs font-bold text-orange-950">น้ำมันเตาที่ใช้ทั้งหมด (ลิตร):</span>
-                <span className="text-base font-black text-orange-950">
+                <span className="text-base font-black text-orange-950 mt-1">
                   {fuelOilTotalLiter.toLocaleString('th-TH', { maximumFractionDigits: 2 })} ลิตร
                 </span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">ค่าน้ำมันเตา (บาท)</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">ราคาน้ำมันเตา (บาท/ลิตร)</label>
                 <input
                   type="number"
                   disabled={isFormLocked}
-                  value={formData.fuel_oil_a_baht || ''}
-                  onChange={(e) => handleInputChange('fuel_oil_a_baht', Number(e.target.value))}
+                  value={formData.fuel_oil_price_per_liter || ''}
+                  onChange={(e) => {
+                    const price = Number(e.target.value);
+                    const calculatedTotalBaht = Math.round(fuelOilTotalLiter * price * 100) / 100;
+                    handleMultiInputChange({
+                      fuel_oil_price_per_liter: price,
+                      fuel_oil_a_baht: calculatedTotalBaht,
+                    });
+                  }}
                   placeholder="0.00"
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold text-slate-900 disabled:opacity-60"
                 />
+              </div>
+
+              <div className="bg-orange-50 p-3 rounded-xl border border-orange-200/90 flex flex-col justify-between">
+                <label className="block text-xs font-bold text-orange-950">ราคาน้ำมันเตารวม (บาท)</label>
+                <div className="text-base font-black text-orange-950 mt-1">
+                  {(formData.fuel_oil_a_baht || (fuelOilTotalLiter * (formData.fuel_oil_price_per_liter || 0))).toLocaleString('th-TH', { maximumFractionDigits: 2 })} บาท
+                </div>
               </div>
             </div>
 

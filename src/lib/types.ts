@@ -80,7 +80,8 @@ export interface ReportData {
   fuel_oil_a_ms3_liter?: number; // MS3 (ลิตร)
   fuel_oil_a_total_liter?: number; // รวมน้ำมันเตา A (ลิตร)
   fuel_oil_a_liter?: number; // ปริมาณน้ำมันเตา A รวม
-  fuel_oil_a_baht?: number; // ค่าน้ำมันเตา A (บาท)
+  fuel_oil_price_per_liter?: number; // ราคาน้ำมันเตาต่อลิตร (บาท/ลิตร)
+  fuel_oil_a_baht?: number; // ค่าน้ำมันเตา A รวม (บาท)
 
   // ก๊าซชีวภาพ/แก๊ส (ลำดับสอง): MS1, MS2, MS3 (m³)
   gas_ms1_m3?: number; // แก๊ส MS1 (m³)
