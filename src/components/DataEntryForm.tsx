@@ -413,7 +413,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
       formData.gas_ms2_m3 ||
       formData.gas_ms3_m3
     ) {
-      filledCategories.push({ key: 'cat3', name: 'หมวดที่ 3: เชื้อเพลิง (Fuel & Gas)' });
+      filledCategories.push({ key: 'cat3', name: 'หมวดที่ 3: น้ำมันเตา (Fuel Oil)' });
     }
     if (
       formData.elec_meter1_ms1_ms3_tf ||
@@ -758,7 +758,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
                 }`}
             >
               <Flame className="w-4 h-4 text-orange-500" />
-              <span>3. เชื้อเพลิง (Fuel)</span>
+              <span>3. น้ำมันเตา (Fuel Oil)</span>
             </button>
 
             <button
@@ -1076,7 +1076,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
         </div>
       )}
 
-      {/* CATEGORY 3: เชื้อเพลิง (FUEL & GAS) */}
+      {/* CATEGORY 3: น้ำมันเตา (FUEL OIL) */}
       {activeCategory === 'cat3' && (
         <div className="bg-white rounded-2xl border border-orange-200 shadow-sm overflow-hidden space-y-4 p-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1087,7 +1087,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
               <div>
                 <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
                   <Flame className="w-5 h-5 text-orange-600" />
-                  <span>หมวดที่ 3: เชื้อเพลิง (Fuel & Gas)</span>
+                  <span>หมวดที่ 3: น้ำมันเตา (Bunker Oil)</span>
                 </h3>
                 <p className="text-xs text-slate-500">
                   ปริมาณแก๊สที่ใช้ MS1, MS2, MS3 และ น้ำมันเตา A
@@ -1141,7 +1141,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-orange-100/70 p-3 rounded-xl border border-orange-200 flex items-center justify-between">
-                <span className="text-xs font-bold text-orange-950">รวมน้ำมันเตาทั้งหมด (ลิตร):</span>
+                <span className="text-xs font-bold text-orange-950">น้ำมันเตาที่ใช้ทั้งหมด (ลิตร):</span>
                 <span className="text-base font-black text-orange-950">
                   {fuelOilTotalLiter.toLocaleString('th-TH', { maximumFractionDigits: 2 })} ลิตร
                 </span>
