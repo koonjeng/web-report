@@ -109,6 +109,14 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
 
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [dailyStartDate, setDailyStartDate] = useState<string>('');
+  const [dailyEndDate, setDailyEndDate] = useState<string>('');
+  const [headerDateText, setHeaderDateText] = useState<string>('');
+
+  // Update default header text when month or year changes
+  useEffect(() => {
+    setHeaderDateText(`1–${MONTH_NAMES_TH[selectedMonth - 1]} ${selectedYear}`);
+  }, [selectedMonth, selectedYear]);
 
   const triggerNotify = (msg: string) => {
     setNotification(msg);
@@ -118,148 +126,38 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
   // Sync exact data from system (Monthly Reports + Category Submissions) filtered by date range or month
   useEffect(() => {
     async function syncEnergyData() {
-      let mergedData: Partial<ReportData> = {};
       const catSubmissionsList = await getCategorySubmissions(selectedYear);
-
-      // 1. If date range is specified (startDate/endDate), fetch ALL matching submissions across months
-      if (startDate || endDate) {
-        const allSubs = catSubmissionsList.filter((s) => {
-          if (s.status !== 'approved' && s.status !== 'pending') return false;
-          if (startDate && s.report_date && s.report_date < startDate) return false;
-          if (endDate && s.report_date && s.report_date > endDate) return false;
-          return true;
-        });
-
-        let totalSludgeTons = 0;
-        let totalSludgeTrips = 0;
-        let totalSludgeCost = 0;
-        let totalFuelLiter = 0;
-        let totalFuelCost = 0;
-
-        // Map to aggregate entries by date string
-        const dateMap = new Map<string, { date: string; sludge: number; fuel: number; m1: number; m2: number; m3: number; solar1: number; solar2: number }>();
-
-        allSubs.forEach((sub) => {
-          const subData = sub.data || {};
-          // Accumulate numeric fields instead of overwriting
-          for (const key of Object.keys(subData)) {
-            const val = (subData as any)[key];
-            if (val === undefined || val === null || val === '') continue;
-            if (typeof val === 'number') {
-              (mergedData as any)[key] = (Number((mergedData as any)[key]) || 0) + val;
-            } else {
-              (mergedData as any)[key] = val;
-            }
+      const isSelectedMonthSub = (s: any) => {
+        if (s.month === selectedMonth) return true;
+        if (s.report_date) {
+          const parts = s.report_date.split('-');
+          if (parts.length === 3 && parseInt(parts[1], 10) === selectedMonth) {
+            return true;
           }
-
-          const m1 = (Number(subData.elec_ms3_ms1_tf_on_peak) || 0) + (Number(subData.elec_ms3_ms1_tf_off_peak) || 0) || Number(subData.elec_meter1_ms1_ms3_tf) || 0;
-          const m2 = (Number(subData.elec_utl_on_peak) || 0) + (Number(subData.elec_utl_off_peak) || 0) || Number(subData.elec_meter2_utl) || 0;
-          const m3 = (Number(subData.elec_ms2_mix_on_peak) || 0) + (Number(subData.elec_ms2_mix_off_peak) || 0) || Number(subData.elec_meter3_ms2_mix) || 0;
-
-          const solar1 = Number(subData.solar_meter1_ms2) || 0;
-          const solar2 = Number(subData.solar_meter2_tf) || 0;
-
-          const sludge = (Number(subData.sludge_tons) || 0) + (Number(subData.sludge_vac_tons) || 0);
-          const fuel = (Number(subData.fuel_oil_a_ms1_liter) || 0) + (Number(subData.fuel_oil_a_ms2_liter) || 0) + (Number(subData.fuel_oil_a_ms3_liter) || 0) || Number(subData.fuel_oil_a_total_liter) || Number(subData.fuel_oil_a_liter) || 0;
-          const fuelBaht = Number(subData.fuel_oil_a_baht) || 0;
-          const sludgeBaht = Number(subData.sludge_grand_total_baht) || Number(subData.sludge_total_baht) || 0;
-          const sludgeTrips = Number(subData.sludge_trips) || 0;
-
-          totalSludgeTons += sludge;
-          totalSludgeTrips += sludgeTrips;
-          totalSludgeCost += sludgeBaht;
-          totalFuelLiter += fuel;
-          totalFuelCost += fuelBaht;
-
-          const dateStr = sub.report_date ? sub.report_date.split('-').reverse().join('/') : `1 ${MONTH_SHORT_TH[sub.month - 1]}`;
-
-          if (dateMap.has(dateStr)) {
-            const existing = dateMap.get(dateStr)!;
-            existing.sludge += sludge;
-            existing.fuel += fuel;
-            existing.m1 += m1;
-            existing.m2 += m2;
-            existing.m3 += m3;
-            existing.solar1 += solar1;
-            existing.solar2 += solar2;
-          } else {
-            dateMap.set(dateStr, {
-              date: dateStr,
-              sludge,
-              fuel,
-              m1,
-              m2,
-              m3,
-              solar1,
-              solar2,
-            });
-          }
-        });
-
-        const dailyList = Array.from(dateMap.values());
-
-        if (dailyList.length > 0) {
-          setDailyRows(dailyList);
-        } else {
-          setDailyRows([
-            {
-              date: startDate && endDate ? `${startDate.split('-').reverse().join('/')} – ${endDate.split('-').reverse().join('/')}` : 'ช่วงวันที่เลือก',
-              sludge: totalSludgeTons,
-              fuel: totalFuelLiter,
-              m1: Number(mergedData.elec_meter1_ms1_ms3_tf) || 0,
-              m2: Number(mergedData.elec_meter2_utl) || 0,
-              m3: Number(mergedData.elec_meter3_ms2_mix) || 0,
-              solar1: Number(mergedData.solar_meter1_ms2) || 0,
-              solar2: Number(mergedData.solar_meter2_tf) || 0,
-            },
-          ]);
         }
+        return false;
+      };
 
-        setFuelLiter(totalFuelLiter);
-        setFuelCost(totalFuelCost);
+      const reportObj = reportsData.find((r) => r.report.month === selectedMonth);
+      let mergedData: Partial<ReportData> = { ...(reportObj?.data || {}) };
 
-        setOpsRows([
-          {
-            dateRange: startDate && endDate ? `${startDate.split('-').reverse().join('/')} – ${endDate.split('-').reverse().join('/')}` : 'ช่วงวันที่เลือก',
-            title: mergedData.sludge_removal_desc || 'กำจัดตะกอน',
-            trips: totalSludgeTrips,
-            tons: totalSludgeTons,
-            cost: totalSludgeCost,
-          },
-        ]);
-      } else {
-        // 2. Default: Get base report data for selected month
-        const reportObj = reportsData.find((r) => r.report.month === selectedMonth);
-        mergedData = { ...(reportObj?.data || {}) };
+      // 1. KPI Data Filtering (using startDate/endDate for KPI metrics header strip & YoY)
+      const kpiSubs = catSubmissionsList.filter((s) => {
+        if (s.status !== 'approved' && s.status !== 'pending') return false;
+        if (startDate && s.report_date && s.report_date < startDate) return false;
+        if (endDate && s.report_date && s.report_date > endDate) return false;
+        if (!startDate && !endDate && !isSelectedMonthSub(s)) return false;
+        return true;
+      });
 
-        // Helper to check if submission belongs to selectedMonth
-        const isSelectedMonthSub = (s: any) => {
-          if (s.month === selectedMonth) return true;
-          if (s.report_date) {
-            const parts = s.report_date.split('-');
-            if (parts.length === 3 && parseInt(parts[1], 10) === selectedMonth) {
-              return true;
-            }
-          }
-          return false;
-        };
+      let totalKpiSludgeTons = 0;
+      let totalKpiFuelLiter = 0;
+      let totalKpiFuelCost = 0;
+      let totalKpiSludgeCost = 0;
+      let totalKpiSludgeTrips = 0;
 
-        const catSubs = catSubmissionsList.filter(
-          (s) => isSelectedMonthSub(s) && (s.status === 'approved' || s.status === 'pending')
-        );
-
-      let totalSludgeTons = 0;
-      let totalSludgeTrips = 0;
-      let totalSludgeCost = 0;
-      let totalFuelLiter = 0;
-      let totalFuelCost = 0;
-
-      // Map to aggregate entries by date string in month view
-      const dateMap = new Map<string, { date: string; sludge: number; fuel: number; m1: number; m2: number; m3: number; solar1: number; solar2: number }>();
-
-      catSubs.forEach((sub) => {
+      kpiSubs.forEach((sub) => {
         const subData = sub.data || {};
-        // Accumulate numeric fields instead of overwriting
         for (const key of Object.keys(subData)) {
           const val = (subData as any)[key];
           if (val === undefined || val === null || val === '') continue;
@@ -270,6 +168,32 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
           }
         }
 
+        const sludge = (Number(subData.sludge_tons) || 0) + (Number(subData.sludge_vac_tons) || 0);
+        const fuel = (Number(subData.fuel_oil_a_ms1_liter) || 0) + (Number(subData.fuel_oil_a_ms2_liter) || 0) + (Number(subData.fuel_oil_a_ms3_liter) || 0) || Number(subData.fuel_oil_a_total_liter) || Number(subData.fuel_oil_a_liter) || 0;
+        const fuelBaht = Number(subData.fuel_oil_a_baht) || 0;
+        const sludgeBaht = Number(subData.sludge_grand_total_baht) || Number(subData.sludge_total_baht) || 0;
+        const sludgeTrips = Number(subData.sludge_trips) || 0;
+
+        totalKpiSludgeTons += sludge;
+        totalKpiSludgeTrips += sludgeTrips;
+        totalKpiSludgeCost += sludgeBaht;
+        totalKpiFuelLiter += fuel;
+        totalKpiFuelCost += fuelBaht;
+      });
+
+      // 2. Daily Log Data Filtering (using dailyStartDate/dailyEndDate independently)
+      const dailySubs = catSubmissionsList.filter((s) => {
+        if (s.status !== 'approved' && s.status !== 'pending') return false;
+        if (dailyStartDate && s.report_date && s.report_date < dailyStartDate) return false;
+        if (dailyEndDate && s.report_date && s.report_date > dailyEndDate) return false;
+        if (!dailyStartDate && !dailyEndDate && !isSelectedMonthSub(s)) return false;
+        return true;
+      });
+
+      const dateMap = new Map<string, { date: string; sludge: number; fuel: number; m1: number; m2: number; m3: number; solar1: number; solar2: number }>();
+
+      dailySubs.forEach((sub) => {
+        const subData = sub.data || {};
         const m1 = (Number(subData.elec_ms3_ms1_tf_on_peak) || 0) + (Number(subData.elec_ms3_ms1_tf_off_peak) || 0) || Number(subData.elec_meter1_ms1_ms3_tf) || 0;
         const m2 = (Number(subData.elec_utl_on_peak) || 0) + (Number(subData.elec_utl_off_peak) || 0) || Number(subData.elec_meter2_utl) || 0;
         const m3 = (Number(subData.elec_ms2_mix_on_peak) || 0) + (Number(subData.elec_ms2_mix_off_peak) || 0) || Number(subData.elec_meter3_ms2_mix) || 0;
@@ -279,17 +203,8 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
 
         const sludge = (Number(subData.sludge_tons) || 0) + (Number(subData.sludge_vac_tons) || 0);
         const fuel = (Number(subData.fuel_oil_a_ms1_liter) || 0) + (Number(subData.fuel_oil_a_ms2_liter) || 0) + (Number(subData.fuel_oil_a_ms3_liter) || 0) || Number(subData.fuel_oil_a_total_liter) || Number(subData.fuel_oil_a_liter) || 0;
-        const fuelBaht = Number(subData.fuel_oil_a_baht) || 0;
-        const sludgeBaht = Number(subData.sludge_grand_total_baht) || Number(subData.sludge_total_baht) || 0;
-        const sludgeTrips = Number(subData.sludge_trips) || 0;
 
-        totalSludgeTons += sludge;
-        totalSludgeTrips += sludgeTrips;
-        totalSludgeCost += sludgeBaht;
-        totalFuelLiter += fuel;
-        totalFuelCost += fuelBaht;
-
-        const dateStr = sub.report_date ? sub.report_date.split('-').reverse().join('/') : `1 ${MONTH_SHORT_TH[selectedMonth - 1]}`;
+        const dateStr = sub.report_date ? sub.report_date.split('-').reverse().join('/') : `1 ${MONTH_SHORT_TH[sub.month - 1]}`;
 
         if (dateMap.has(dateStr)) {
           const existing = dateMap.get(dateStr)!;
@@ -315,7 +230,6 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
       });
 
       const dailyList = Array.from(dateMap.values());
-
       const d = mergedData;
       const metrics = calculateMetrics(d as ReportData);
 
@@ -326,9 +240,9 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
       const solar1Val = Number(d.solar_meter1_ms2) || 0;
       const solar2Val = Number(d.solar_meter2_tf) || 0;
 
-      const sludgeVal = totalSludgeTons || (Number(d.sludge_tons) || 0) + (Number(d.sludge_vac_tons) || 0);
-      const fuelLiterVal = totalFuelLiter || (Number(d.fuel_oil_a_ms1_liter) || 0) + (Number(d.fuel_oil_a_ms2_liter) || 0) + (Number(d.fuel_oil_a_ms3_liter) || 0) || metrics.fuelOilTotalLiter || Number(d.fuel_oil_a_total_liter) || Number(d.fuel_oil_a_liter) || 0;
-      const fuelCostVal = totalFuelCost || Number(d.fuel_oil_a_baht) || 0;
+      const sludgeVal = totalKpiSludgeTons || (Number(d.sludge_tons) || 0) + (Number(d.sludge_vac_tons) || 0);
+      const fuelLiterVal = totalKpiFuelLiter || (Number(d.fuel_oil_a_ms1_liter) || 0) + (Number(d.fuel_oil_a_ms2_liter) || 0) + (Number(d.fuel_oil_a_ms3_liter) || 0) || metrics.fuelOilTotalLiter || Number(d.fuel_oil_a_total_liter) || Number(d.fuel_oil_a_liter) || 0;
+      const fuelCostVal = totalKpiFuelCost || Number(d.fuel_oil_a_baht) || 0;
 
       const monthNameShort = MONTH_SHORT_TH[selectedMonth - 1];
 
@@ -337,7 +251,7 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
       } else {
         setDailyRows([
           {
-            date: `1 ${monthNameShort}`,
+            date: dailyStartDate && dailyEndDate ? `${dailyStartDate.split('-').reverse().join('/')} – ${dailyEndDate.split('-').reverse().join('/')}` : `1 ${monthNameShort}`,
             sludge: sludgeVal,
             fuel: fuelLiterVal,
             m1: m1Val,
@@ -354,16 +268,15 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
 
       setOpsRows([
         {
-          dateRange: `1–${monthNameShort}`,
+          dateRange: startDate && endDate ? `${startDate.split('-').reverse().join('/')} – ${endDate.split('-').reverse().join('/')}` : `1–${monthNameShort}`,
           title: d.sludge_removal_desc || 'กำจัดตะกอน',
-          trips: totalSludgeTrips || Number(d.sludge_trips) || 0,
+          trips: totalKpiSludgeTrips || Number(d.sludge_trips) || 0,
           tons: sludgeVal,
-          cost: totalSludgeCost || metrics.sludgeGrandTotalBaht || Number(d.sludge_total_baht) || 0,
+          cost: totalKpiSludgeCost || metrics.sludgeGrandTotalBaht || Number(d.sludge_total_baht) || 0,
         },
       ]);
-    }
 
-    // 3. YoY Comparison Calculation (Sync v2 from totalElecMeter and totalSolarMeter)
+      // 3. YoY Comparison Calculation (Sync v2 from totalElecMeter and totalSolarMeter)
     const prevYear = selectedYear - 1;
     const isSelectedMonthSubPrev = (s: any) => {
       if (s.month === selectedMonth) return true;
@@ -399,19 +312,20 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
     const solar1Cur = Number(mergedData.solar_meter1_ms2) || 0;
     const solar2Cur = Number(mergedData.solar_meter2_tf) || 0;
 
-    setElecYoy([
-      { name: 'มิเตอร์ 1 (MS1,3,TF)', v1: m1Prev, v2: m1Cur },
-      { name: 'มิเตอร์ 2 (UTL)', v1: m2Prev, v2: m2Cur },
-      { name: 'มิเตอร์ 3 (MS2)', v1: m3Prev, v2: m3Cur },
-    ]);
+      setElecYoy([
+        { name: 'มิเตอร์ 1 (MS1,3,TF)', v1: m1Prev, v2: m1Cur },
+        { name: 'มิเตอร์ 2 (UTL)', v1: m2Prev, v2: m2Cur },
+        { name: 'มิเตอร์ 3 (MS2)', v1: m3Prev, v2: m3Cur },
+      ]);
 
-    setSolarYoy([
-      { name: 'โซลาร์ MS2', v1: solar1Prev, v2: solar1Cur },
-      { name: 'โซลาร์ TF', v1: solar2Prev, v2: solar2Cur },
-    ]);
+      setSolarYoy([
+        { name: 'โซลาร์ MS2', v1: solar1Prev, v2: solar1Cur },
+        { name: 'โซลาร์ TF', v1: solar2Prev, v2: solar2Cur },
+      ]);
     }
+
     syncEnergyData();
-  }, [selectedMonth, reportsData, selectedYear, startDate, endDate]);
+  }, [selectedMonth, reportsData, selectedYear, startDate, endDate, dailyStartDate, dailyEndDate]);
 
   // Dynamic Calculations
   const totalElecMeter1 = dailyRows.reduce((sum, r) => sum + Number(r.m1 || 0), 0);
@@ -511,8 +425,9 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
             ))}
           </select>
 
-          {/* DATE RANGE FILTERS */}
+          {/* DATE RANGE FILTERS FOR TOP KPI */}
           <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-3 py-1.5 shadow-2xs">
+            <span className="text-[11px] font-bold text-slate-700 shrink-0">ช่วงวันที่ KPI:</span>
             <Calendar className="w-3.5 h-3.5 text-sky-600 shrink-0" />
             <div className="relative inline-flex items-center">
               <input
@@ -521,7 +436,7 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-24 bg-transparent text-[11px] font-semibold focus:outline-none cursor-pointer"
                 style={{ color: 'transparent', caretColor: 'transparent' }}
-                title="วันเริ่มต้น"
+                title="วันเริ่มต้น KPI"
               />
               <span className="absolute left-0 pointer-events-none text-[11px] font-semibold text-slate-800">
                 {startDate ? startDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
@@ -535,7 +450,7 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
                 onChange={(e) => setEndDate(e.target.value)}
                 className="w-24 bg-transparent text-[11px] font-semibold focus:outline-none cursor-pointer"
                 style={{ color: 'transparent', caretColor: 'transparent' }}
-                title="วันสิ้นสุด"
+                title="วันสิ้นสุด KPI"
               />
               <span className="absolute left-0 pointer-events-none text-[11px] font-semibold text-slate-800">
                 {endDate ? endDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
@@ -548,7 +463,7 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
                   setEndDate('');
                 }}
                 className="text-[10px] text-rose-600 hover:text-rose-800 font-bold ml-1 cursor-pointer"
-                title="ล้างช่วงวันที่"
+                title="ล้างช่วงวันที่ KPI"
               >
                 ✕
               </button>
@@ -600,10 +515,14 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
             </div>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-sky-200">ประจำรอบ</p>
-            <span className="inline-flex items-center gap-1.5 bg-white/20 border border-white/30 px-3 py-1 rounded-full text-xs font-bold text-white mt-1">
-              1–{MONTH_NAMES_TH[selectedMonth - 1]} {selectedYear}
-            </span>
+            <p className="text-[10px] text-sky-200 mb-0.5">ประจำรอบ (คลิกเพื่อแก้ไข)</p>
+            <input
+              type="text"
+              value={headerDateText}
+              onChange={(e) => setHeaderDateText(e.target.value)}
+              className="bg-white/20 border border-white/40 px-3 py-1 rounded-full text-xs font-bold text-white text-center focus:outline-none focus:bg-white/30 transition-all w-36"
+              title="แก้ไขวันที่แสดงผลมุมขวาบนได้ตามต้องการ"
+            />
             <p className="text-[9px] text-sky-300 mt-1">หน้า 1 / 2</p>
           </div>
         </div>
@@ -640,30 +559,79 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
         <div className="p-4 space-y-3.5 flex-1">
           {/* DAILY LOG TABLE */}
           <div className="bg-sky-50/50 border border-sky-200 rounded-xl overflow-hidden">
-            <div className="bg-sky-100/80 px-3 py-1.5 font-black text-sky-900 text-xs flex items-center justify-between border-b border-sky-200">
-              <span>บันทึกการใช้งานรายวัน (DAILY LOG)</span>
-              {!isExporting && (
-                <button
-                  onClick={() =>
-                    setDailyRows((prev) => [
-                      ...prev,
-                      {
-                        date: `${prev.length + 1} พ.ค. 69`,
-                        sludge: 0,
-                        fuel: 0,
-                        m1: 0,
-                        m2: 0,
-                        m3: 0,
-                        solar1: 0,
-                        solar2: 0,
-                      },
-                    ])
-                  }
-                  className="text-[10px] bg-sky-700 text-white px-2 py-0.5 rounded font-bold hover:bg-sky-600 cursor-pointer"
-                >
-                  + เพิ่มวัน
-                </button>
-              )}
+            <div className="bg-sky-100/80 px-3 py-1.5 font-black text-sky-900 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-sky-200">
+              <div className="flex items-center gap-2">
+                <span>บันทึกการใช้งานรายวัน (DAILY LOG)</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* DAILY LOG INDEPENDENT DATE RANGE SELECTOR */}
+                <div className="flex items-center gap-1.5 bg-white border border-sky-300 rounded-lg px-2 py-1 shadow-2xs no-print">
+                  <span className="text-[10px] font-bold text-sky-900 shrink-0">กรองวันที่:</span>
+                  <div className="relative inline-flex items-center">
+                    <input
+                      type="date"
+                      value={dailyStartDate}
+                      onChange={(e) => setDailyStartDate(e.target.value)}
+                      className="w-20 bg-transparent text-[10px] font-semibold focus:outline-none cursor-pointer"
+                      style={{ color: 'transparent', caretColor: 'transparent' }}
+                      title="วันเริ่มต้น Daily Log"
+                    />
+                    <span className="absolute left-0 pointer-events-none text-[10px] font-semibold text-slate-800">
+                      {dailyStartDate ? dailyStartDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
+                    </span>
+                  </div>
+                  <span className="text-slate-400 font-bold text-[10px]">-</span>
+                  <div className="relative inline-flex items-center">
+                    <input
+                      type="date"
+                      value={dailyEndDate}
+                      onChange={(e) => setDailyEndDate(e.target.value)}
+                      className="w-20 bg-transparent text-[10px] font-semibold focus:outline-none cursor-pointer"
+                      style={{ color: 'transparent', caretColor: 'transparent' }}
+                      title="วันสิ้นสุด Daily Log"
+                    />
+                    <span className="absolute left-0 pointer-events-none text-[10px] font-semibold text-slate-800">
+                      {dailyEndDate ? dailyEndDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
+                    </span>
+                  </div>
+                  {(dailyStartDate || dailyEndDate) && (
+                    <button
+                      onClick={() => {
+                        setDailyStartDate('');
+                        setDailyEndDate('');
+                      }}
+                      className="text-[9px] text-rose-600 hover:text-rose-800 font-bold ml-0.5 cursor-pointer"
+                      title="ล้างช่วงวันที่ Daily Log"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {!isExporting && (
+                  <button
+                    onClick={() =>
+                      setDailyRows((prev) => [
+                        ...prev,
+                        {
+                          date: `${prev.length + 1} พ.ค. 69`,
+                          sludge: 0,
+                          fuel: 0,
+                          m1: 0,
+                          m2: 0,
+                          m3: 0,
+                          solar1: 0,
+                          solar2: 0,
+                        },
+                      ])
+                    }
+                    className="text-[10px] bg-sky-700 text-white px-2 py-0.5 rounded font-bold hover:bg-sky-600 cursor-pointer shrink-0"
+                  >
+                    + เพิ่มวัน
+                  </button>
+                )}
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-center text-[10px] border-collapse">
