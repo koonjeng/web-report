@@ -50,20 +50,20 @@ const ZONES: ZoneMarker[] = [
       { label: 'COD ขาออก', value: '45', unit: 'mg/L' },
       { label: 'Removal Eff.', value: '98.5', unit: '%' },
     ],
-    // Purple Polygon: top-left pond
+    // Purple Polygon (top-left pond along purple line)
     polygonPoints: [
-      [6.4, 38.3],
-      [44.8, 5.0],
-      [62.1, 13.5],
-      [27.3, 29.5],
+      [6.7, 38.0],
+      [44.7, 4.8],
+      [62.0, 13.8],
+      [27.0, 29.5],
     ],
-    labelCenter: [33, 20],
+    labelCenter: [32, 20],
   },
   {
     id: 'z2',
     name: 'บ่อหมักก๊าซชีวภาพหลัก (Anaerobic Biogas Cover Pond - White/Grey)',
     category: 'Biogas & Energy',
-    color: '#e2e8f0', // White/Silver outline
+    color: '#f8fafc', // White/Silver outline
     borderColor: 'border-slate-300',
     bgLight: 'bg-slate-100 text-slate-900',
     badgeBg: 'bg-slate-800 text-white',
@@ -74,19 +74,19 @@ const ZONES: ZoneMarker[] = [
       { label: 'Methane CH4', value: '62.4', unit: '%' },
       { label: 'H2S Gas', value: '120', unit: 'ppm' },
     ],
-    // White/Silver Polygon: top biogas cover pond
+    // White Polygon (large middle covered biogas pond)
     polygonPoints: [
-      [38.5, 26.5],
+      [38.7, 26.5],
       [88.2, 21.0],
-      [86.5, 38.8],
-      [83.5, 39.0],
-      [36.6, 28.5],
+      [86.6, 38.6],
+      [83.4, 39.0],
+      [36.8, 28.5],
     ],
     labelCenter: [62, 30],
   },
   {
     id: 'z3',
-    name: 'บ่อตกตะกอน & บ่อพักน้ำดิบ (Sludge Settling & Equalization Pond - Orange)',
+    name: 'บ่อพักน้ำดิบ & ตะกอน (Sludge Settling & Equalization Pond - Orange)',
     category: 'Wastewater Equalization',
     color: '#fb923c', // Orange outline
     borderColor: 'border-orange-500',
@@ -99,14 +99,14 @@ const ZONES: ZoneMarker[] = [
       { label: 'VFA Mix1', value: '1,200', unit: 'mg/L' },
       { label: 'pH Mix2', value: '6.8', unit: 'pH' },
     ],
-    // Orange Polygon: middle-left pond
+    // Orange Polygon (middle-left orange border pond)
     polygonPoints: [
-      [15.0, 42.0],
-      [56.0, 34.0],
-      [47.5, 52.0],
-      [6.4, 39.0],
+      [15.2, 42.0],
+      [55.9, 34.0],
+      [47.4, 52.0],
+      [6.5, 39.2],
     ],
-    labelCenter: [32, 45],
+    labelCenter: [31, 44],
   },
   {
     id: 'z4',
@@ -123,12 +123,12 @@ const ZONES: ZoneMarker[] = [
       { label: 'Blower Active', value: '4/4', unit: 'Units' },
       { label: 'DO Level', value: '2.4', unit: 'mg/L' },
     ],
-    // Red Polygon: middle-right large aeration pond
+    // Red Polygon (middle-right large red border aeration pond)
     polygonPoints: [
-      [57.5, 36.0],
+      [57.5, 35.8],
       [89.0, 43.5],
       [82.0, 63.5],
-      [50.0, 53.5],
+      [49.8, 53.2],
     ],
     labelCenter: [70, 50],
   },
@@ -146,14 +146,14 @@ const ZONES: ZoneMarker[] = [
       { label: 'Biogas Stock', value: '850', unit: 'm³' },
       { label: 'Pressure', value: '12.5', unit: 'mbar' },
     ],
-    // Yellow Polygon: bottom-center large covered lagoon
+    // Yellow Polygon (bottom-center yellow border covered lagoon)
     polygonPoints: [
-      [35.0, 90.0],
-      [67.0, 77.5],
-      [59.5, 69.5],
-      [32.5, 87.0],
+      [30.8, 89.8],
+      [60.0, 72.8],
+      [67.8, 77.2],
+      [39.2, 98.8],
     ],
-    labelCenter: [48, 82],
+    labelCenter: [48, 86],
   },
   {
     id: 'z6',
@@ -169,7 +169,7 @@ const ZONES: ZoneMarker[] = [
       { label: 'ตะกอนขนออก', value: '171.9', unit: 'Ton' },
       { label: 'จำนวนเที่ยว', value: '14', unit: 'Trips' },
     ],
-    // Pink Polygon: bottom-right pink pond
+    // Pink Polygon (bottom-right pink border pond)
     polygonPoints: [
       [59.5, 62.0],
       [76.8, 64.5],
@@ -192,12 +192,12 @@ const ZONES: ZoneMarker[] = [
       { label: 'Free Capacity', value: '65', unit: '%' },
       { label: 'Water Level', value: '1.8', unit: 'm' },
     ],
-    // Light Green Polygon: top-right narrow pond
+    // Light Green Polygon (top-right narrow light-green border pond)
     polygonPoints: [
-      [60.0, 15.5],
-      [91.0, 20.0],
-      [90.0, 24.5],
-      [59.0, 17.5],
+      [59.8, 15.5],
+      [90.8, 20.2],
+      [89.5, 24.0],
+      [58.8, 17.5],
     ],
     labelCenter: [75, 18],
   },
@@ -215,12 +215,12 @@ const ZONES: ZoneMarker[] = [
       { label: 'PEA Usage', value: '424.6k', unit: 'kWh' },
       { label: 'Solar Generated', value: '26,973.2', unit: 'kWh' },
     ],
-    // Blue Polygon: center small pump station between ponds
+    // Blue Polygon (center small blue border pump station channel)
     polygonPoints: [
-      [47.5, 52.5],
-      [57.0, 36.5],
-      [58.0, 37.0],
-      [48.5, 53.0],
+      [47.4, 52.2],
+      [55.9, 34.0],
+      [57.5, 35.8],
+      [49.8, 53.2],
     ],
     labelCenter: [52, 44],
   },
