@@ -164,7 +164,12 @@ export async function createUserAccount(email: string, password: string, role: U
         password,
       });
 
-      if (!authError && authData.user) {
+      if (authError) {
+        console.error('Supabase Auth SignUp Error:', authError);
+        return { success: false, error: `ไม่สามารถสร้างบัญชีได้: ${authError.message}` };
+      }
+
+      if (authData.user) {
         const { error: pErr } = await supabase.from('profiles').upsert({
           id: authData.user.id,
           email,
@@ -177,6 +182,7 @@ export async function createUserAccount(email: string, password: string, role: U
       }
     } catch (err: any) {
       console.warn('Supabase user creation warning:', err);
+      return { success: false, error: err?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ Supabase' };
     }
   }
 
