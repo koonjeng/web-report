@@ -582,49 +582,51 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
               </div>
 
               <div className="flex items-center gap-2">
-                {/* DAILY LOG INDEPENDENT DATE RANGE SELECTOR */}
-                <div className="flex items-center gap-1.5 bg-white border border-sky-300 rounded-lg px-2 py-1 shadow-2xs no-print">
-                  <span className="text-[10px] font-bold text-sky-900 shrink-0">กรองวันที่:</span>
-                  <div className="relative inline-flex items-center">
-                    <input
-                      type="date"
-                      value={dailyStartDate}
-                      onChange={(e) => setDailyStartDate(e.target.value)}
-                      className="w-20 bg-transparent text-[10px] font-semibold focus:outline-none cursor-pointer"
-                      style={{ color: 'transparent', caretColor: 'transparent' }}
-                      title="วันเริ่มต้น Daily Log"
-                    />
-                    <span className="absolute left-0 pointer-events-none text-[10px] font-semibold text-slate-800">
-                      {dailyStartDate ? dailyStartDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
-                    </span>
+                {/* DAILY LOG INDEPENDENT DATE RANGE SELECTOR (Hidden on Export & Print) */}
+                {!isExporting && (
+                  <div className="flex items-center gap-1.5 bg-white border border-sky-300 rounded-lg px-2 py-1 shadow-2xs no-print">
+                    <span className="text-[10px] font-bold text-sky-900 shrink-0">กรองวันที่:</span>
+                    <div className="relative inline-flex items-center">
+                      <input
+                        type="date"
+                        value={dailyStartDate}
+                        onChange={(e) => setDailyStartDate(e.target.value)}
+                        className="w-20 bg-transparent text-[10px] font-semibold focus:outline-none cursor-pointer"
+                        style={{ color: 'transparent', caretColor: 'transparent' }}
+                        title="วันเริ่มต้น Daily Log"
+                      />
+                      <span className="absolute left-0 pointer-events-none text-[10px] font-semibold text-slate-800">
+                        {dailyStartDate ? dailyStartDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
+                      </span>
+                    </div>
+                    <span className="text-slate-400 font-bold text-[10px]">-</span>
+                    <div className="relative inline-flex items-center">
+                      <input
+                        type="date"
+                        value={dailyEndDate}
+                        onChange={(e) => setDailyEndDate(e.target.value)}
+                        className="w-20 bg-transparent text-[10px] font-semibold focus:outline-none cursor-pointer"
+                        style={{ color: 'transparent', caretColor: 'transparent' }}
+                        title="วันสิ้นสุด Daily Log"
+                      />
+                      <span className="absolute left-0 pointer-events-none text-[10px] font-semibold text-slate-800">
+                        {dailyEndDate ? dailyEndDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
+                      </span>
+                    </div>
+                    {(dailyStartDate || dailyEndDate) && (
+                      <button
+                        onClick={() => {
+                          setDailyStartDate('');
+                          setDailyEndDate('');
+                        }}
+                        className="text-[9px] text-rose-600 hover:text-rose-800 font-bold ml-0.5 cursor-pointer"
+                        title="ล้างช่วงวันที่ Daily Log"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
-                  <span className="text-slate-400 font-bold text-[10px]">-</span>
-                  <div className="relative inline-flex items-center">
-                    <input
-                      type="date"
-                      value={dailyEndDate}
-                      onChange={(e) => setDailyEndDate(e.target.value)}
-                      className="w-20 bg-transparent text-[10px] font-semibold focus:outline-none cursor-pointer"
-                      style={{ color: 'transparent', caretColor: 'transparent' }}
-                      title="วันสิ้นสุด Daily Log"
-                    />
-                    <span className="absolute left-0 pointer-events-none text-[10px] font-semibold text-slate-800">
-                      {dailyEndDate ? dailyEndDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
-                    </span>
-                  </div>
-                  {(dailyStartDate || dailyEndDate) && (
-                    <button
-                      onClick={() => {
-                        setDailyStartDate('');
-                        setDailyEndDate('');
-                      }}
-                      className="text-[9px] text-rose-600 hover:text-rose-800 font-bold ml-0.5 cursor-pointer"
-                      title="ล้างช่วงวันที่ Daily Log"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
+                )}
 
                 {!isExporting && (
                   <button
