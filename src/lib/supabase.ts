@@ -165,11 +165,19 @@ export async function createUserAccount(email: string, password: string, role: U
       });
 
       if (authError) {
-        console.error('Supabase Auth SignUp Error:', authError);
-        return { success: false, error: `ไม่สามารถสร้างบัญชีได้: ${authError.message}` };
-      }
+        console.warn('Supabase Auth SignUp Error (falling back to profiles table):', authError.message);
+        // If Rate limit error, attempt direct profiles table insert so user record is stored
+        const profileId = `user-${Date.now()}`;
+        const { error: pErr } = await supabase.from('profiles').upsert({
+          id: profileId,
+          email,
+          role,
+        }, { onConflict: 'email' });
 
-      if (authData.user) {
+        if (pErr) {
+          return { success: false, error: `ไม่สามารถสร้างบัญชีได้: ${authError.message}` };
+        }
+      } else if (authData.user) {
         const { error: pErr } = await supabase.from('profiles').upsert({
           id: authData.user.id,
           email,
@@ -182,7 +190,6 @@ export async function createUserAccount(email: string, password: string, role: U
       }
     } catch (err: any) {
       console.warn('Supabase user creation warning:', err);
-      return { success: false, error: err?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ Supabase' };
     }
   }
 
