@@ -272,7 +272,13 @@ const ZONES: ZoneMarker[] = [
 export const OverviewView: React.FC = () => {
   const [selectedZone, setSelectedZone] = useState<ZoneMarker | null>(ZONES[0]);
   const [hoveredZone, setHoveredZone] = useState<ZoneMarker | null>(null);
+  const [activeModalZone, setActiveModalZone] = useState<ZoneMarker | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  const handleZoneClick = (zone: ZoneMarker) => {
+    setSelectedZone(zone);
+    setActiveModalZone(zone);
+  };
 
   return (
     <div className="space-y-6 p-4 md:p-8 bg-slate-50 min-h-[calc(100vh-73px)] font-sans text-slate-800 pb-24">
@@ -407,7 +413,7 @@ export const OverviewView: React.FC = () => {
                         className="transition-all duration-200"
                         onMouseEnter={() => setHoveredZone(zone)}
                         onMouseLeave={() => setHoveredZone(null)}
-                        onClick={() => setSelectedZone(zone)}
+                        onClick={() => handleZoneClick(zone)}
                       />
                     </g>
                   );
@@ -422,7 +428,7 @@ export const OverviewView: React.FC = () => {
                 return (
                   <button
                     key={`badge-${zone.id}`}
-                    onClick={() => setSelectedZone(zone)}
+                    onClick={() => handleZoneClick(zone)}
                     onMouseEnter={() => setHoveredZone(zone)}
                     onMouseLeave={() => setHoveredZone(null)}
                     style={{
@@ -451,10 +457,10 @@ export const OverviewView: React.FC = () => {
           <div className="p-3.5 bg-slate-900 border-t border-slate-800 text-slate-300 text-xs font-semibold flex flex-wrap items-center justify-between gap-2 shrink-0">
             <span className="flex items-center gap-1.5 text-sky-400">
               <Info className="w-4 h-4 shrink-0" />
-              <span>คลิกที่ป้ายชื่อตัวหนังสือในภาพ (เช่น Polishing 1, Biogas 1, AS, Aeration) เพื่อดูข้อมูล</span>
+              <span>คลิกที่ป้ายชื่อตัวหนังสือในภาพ (เช่น Polishing 1, Biogas 1, AS) เพื่อเปิดการ์ดแสดงข้อมูล</span>
             </span>
             <span className="text-[11px] text-emerald-400 bg-slate-800 px-2.5 py-1 rounded-md font-bold">
-              ✓ ชื่อบ่อตรงตามผังจริง
+              ✓ เปิดการ์ด Popup เมื่อคลิก
             </span>
           </div>
         </div>
@@ -533,7 +539,7 @@ export const OverviewView: React.FC = () => {
                 return (
                   <div
                     key={zone.id}
-                    onClick={() => setSelectedZone(zone)}
+                    onClick={() => handleZoneClick(zone)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                       isSelected
                         ? `${zone.borderColor} ${zone.bgLight} ring-2 ring-sky-400/20 shadow-sm`
@@ -557,6 +563,80 @@ export const OverviewView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* POPUP MODAL CARD WHEN CLICKING POND NAME BADGE */}
+      {activeModalZone && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div
+            className={`w-full max-w-md bg-white rounded-3xl border shadow-2xl overflow-hidden p-6 space-y-5 relative animate-scaleUp ${activeModalZone.borderColor}`}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setActiveModalZone(null)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition-all cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {/* Header Badge */}
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider ${activeModalZone.badgeBg}`}>
+                {activeModalZone.category}
+              </span>
+            </div>
+
+            {/* Title & Description */}
+            <div>
+              <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">
+                {activeModalZone.name}
+              </h3>
+              <p className="text-xs text-slate-600 mt-2 leading-relaxed font-medium">
+                {activeModalZone.description}
+              </p>
+            </div>
+
+            {/* Key Metrics Grid */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              {activeModalZone.metrics.map((m, idx) => (
+                <div key={idx} className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/90 text-center">
+                  <span className="text-xs font-bold text-slate-500 block">{m.label}</span>
+                  <div className="text-xl font-black text-slate-900 mt-1 tracking-tight">
+                    {m.value} <span className="text-xs font-extrabold text-slate-500">{m.unit}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Parameters checklist */}
+            <div className="pt-3 border-t border-slate-100 space-y-2">
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                พารามิเตอร์และตัววัดหลัก:
+              </span>
+              <div className="space-y-1.5">
+                {activeModalZone.details.map((d, idx) => (
+                  <div
+                    key={idx}
+                    className="text-xs font-bold px-3.5 py-2 rounded-xl bg-slate-100/90 text-slate-800 border border-slate-200 flex items-center gap-2"
+                  >
+                    <TrendingUp className="w-4 h-4 text-sky-600 shrink-0" />
+                    <span>{d}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Bottom Close Action Button */}
+            <div className="pt-2">
+              <button
+                onClick={() => setActiveModalZone(null)}
+                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black rounded-2xl shadow-md transition-all cursor-pointer"
+              >
+                ตกลง / ปิดหน้าต่างนี้
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
