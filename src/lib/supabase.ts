@@ -268,20 +268,26 @@ export async function signInUser(email: string, password: string): Promise<{ ema
       });
 
       if (!authError && authData.user) {
+        // First check if email indicates admin
+        const userEmail = authData.user.email || email;
+        const lowerEmail = userEmail.toLowerCase();
+        
+        let userRole: UserRole = 'approver';
+
+        // Direct profile lookup by id or email
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
-          .eq('id', authData.user.id)
-          .single();
+          .or(`id.eq.${authData.user.id},email.eq.${userEmail}`)
+          .maybeSingle();
 
-        let userRole: UserRole = 'approver';
         if (profile?.role) {
           userRole = profile.role as UserRole;
-        } else if (email.toLowerCase().includes('admin') || email.toLowerCase() === 'admin@tdc.com') {
+        } else if (lowerEmail.includes('admin') || lowerEmail === 'admin@tdc.com') {
           userRole = 'admin';
         }
 
-        return { email: authData.user.email || email, role: userRole };
+        return { email: userEmail, role: userRole };
       }
 
       if (authError) {
