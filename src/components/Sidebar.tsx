@@ -39,6 +39,11 @@ interface MenuItem {
   badge: number | null;
 }
 
+interface MenuCategory {
+  title: string;
+  items: MenuItem[];
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
@@ -54,36 +59,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const hasRole = Boolean(currentUser && (currentUser.role === 'admin' || currentUser.role === 'approver'));
 
-  const menuItems: MenuItem[] = [];
+  // Grouped Menu Categories with Overview at the VERY TOP
+  const menuCategories: MenuCategory[] = [
+    {
+      title: 'ภาพรวมระบบ & การวิเคราะห์',
+      items: [
+        { id: 'overview', label: 'Overview ผังผิวน้ำ', icon: Map, badge: null },
+        ...(hasRole ? [{ id: 'dashboard', label: 'Dashboard สถิติ', icon: LayoutDashboard, badge: null }] : []),
+        ...(hasRole ? [{ id: 'energy-report', label: 'A4 Energy Report', icon: FileText, badge: null }] : []),
+      ],
+    },
+    {
+      title: 'บันทึกข้อมูล & บำรุงรักษา',
+      items: [
+        { id: 'data-entry', label: 'Daily Report ลงข้อมูลรายวัน', icon: FileSpreadsheet, badge: null },
+        { id: 'maintenance', label: 'PM งานซ่อมบำรุง', icon: Wrench, badge: null },
+      ],
+    },
+  ];
 
+  const adminItems: MenuItem[] = [];
   if (hasRole) {
-    menuItems.push({ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null });
-    menuItems.push({ id: 'overview', label: 'Overview', icon: Map, badge: null });
-    menuItems.push({ id: 'energy-report', label: 'A4 Report', icon: FileText, badge: null });
-  } else {
-    menuItems.push({ id: 'overview', label: 'Overview', icon: Map, badge: null });
-  }
-  menuItems.push({ id: 'data-entry', label: 'Daily Report', icon: FileSpreadsheet, badge: null });
-  menuItems.push({ id: 'maintenance', label: 'PM', icon: Wrench, badge: null });
-  if (hasRole) {
-    menuItems.push({
+    adminItems.push({
       id: 'pending',
-      label: 'Pending',
+      label: 'Pending รายการรออนุมัติ',
       icon: Clock,
       badge: pendingCount > 0 ? pendingCount : null,
     });
-    menuItems.push({ id: 'history', label: 'History', icon: Database, badge: null });
-    menuItems.push({ id: 'troubleshooting', label: 'Troubleshoot', icon: ShieldAlert, badge: null });
-
-    menuItems.push({ id: 'playbook', label: 'คู่มือ', icon: BookOpen, badge: null });
+    adminItems.push({ id: 'history', label: 'History ประวัติบันทึก', icon: Database, badge: null });
+    adminItems.push({ id: 'troubleshooting', label: 'Troubleshoot คู่มือแก้ปัญหา', icon: ShieldAlert, badge: null });
+    adminItems.push({ id: 'playbook', label: 'คู่มือการทำงาน', icon: BookOpen, badge: null });
   }
 
   if (currentUser?.role === 'admin') {
-    menuItems.push({ id: 'users', label: 'จัดการผู้ใช้งาน', icon: Users, badge: null });
+    adminItems.push({ id: 'users', label: 'จัดการผู้ใช้งาน', icon: Users, badge: null });
+  }
+
+  if (adminItems.length > 0) {
+    menuCategories.push({
+      title: 'การอนุมัติ & จัดการระบบ',
+      items: adminItems,
+    });
   }
 
   if (currentUser) {
-    menuItems.push({ id: 'settings', label: 'ตั้งค่าบัญชี', icon: Settings, badge: null });
+    menuCategories.push({
+      title: 'ผู้ใช้งาน',
+      items: [{ id: 'settings', label: 'ตั้งค่าบัญชี', icon: Settings, badge: null }],
+    });
   }
 
   const handleNavClick = (tabId: string) => {
@@ -111,38 +134,42 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Navigation Menu */}
-        <nav className="p-4 space-y-1.5 flex-1">
-          <p className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            เมนูหลัก
-          </p>
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
-                  ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/20'
-                  : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
-                  }`}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-sky-400'}`} />
-                  <span className="truncate">{item.label}</span>
-                </div>
-                {item.badge !== null && (
-                  <span
-                    className={`px-2 py-0.5 text-[10px] font-black rounded-full ${isActive ? 'bg-slate-950 text-sky-400' : 'bg-amber-500 text-slate-950 animate-pulse'
+        {/* Navigation Menu Grouped by Category */}
+        <nav className="p-4 space-y-5 flex-1">
+          {menuCategories.map((cat, catIdx) => (
+            <div key={catIdx} className="space-y-1.5">
+              <p className="px-3 text-[10px] font-black uppercase tracking-wider text-sky-400/90">
+                {cat.title}
+              </p>
+              {cat.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavClick(item.id)}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer ${isActive
+                      ? 'bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/20'
+                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-semibold'
                       }`}
                   >
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-sky-400'}`} />
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                    {item.badge !== null && (
+                      <span
+                        className={`px-2 py-0.5 text-[10px] font-black rounded-full ${isActive ? 'bg-slate-950 text-sky-400' : 'bg-amber-500 text-slate-950 animate-pulse'
+                          }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </div>
 
