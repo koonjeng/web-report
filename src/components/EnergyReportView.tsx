@@ -87,9 +87,12 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
     }>
   >([]);
 
-  // Summary & Efficiency Fields
+  // KPI Strip State Variables (completely independent from dailyRows)
+  const [kpiElecTotal, setKpiElecTotal] = useState<number>(0);
+  const [kpiSolarTotal, setKpiSolarTotal] = useState<number>(0);
   const [fuelLiter, setFuelLiter] = useState<number>(0);
   const [fuelCost, setFuelCost] = useState<number>(0);
+  const [kpiSludgeTons, setKpiSludgeTons] = useState<number>(0);
   const [effGasOilRatio, setEffGasOilRatio] = useState<string>('Gas / Oil ratio 80/20%');
   const [effGasDaily, setEffGasDaily] = useState<string>('การใช้ Gas เฉลี่ย 0 Nm³/day');
   const [effLTons, setEffLTons] = useState<string>('L / Tons 0.00');
@@ -150,6 +153,8 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
         return true;
       });
 
+      let totalKpiElec = 0;
+      let totalKpiSolar = 0;
       let totalKpiSludgeTons = 0;
       let totalKpiFuelLiter = 0;
       let totalKpiFuelCost = 0;
@@ -168,12 +173,21 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
           }
         }
 
+        const m1 = (Number(subData.elec_ms3_ms1_tf_on_peak) || 0) + (Number(subData.elec_ms3_ms1_tf_off_peak) || 0) || Number(subData.elec_meter1_ms1_ms3_tf) || 0;
+        const m2 = (Number(subData.elec_utl_on_peak) || 0) + (Number(subData.elec_utl_off_peak) || 0) || Number(subData.elec_meter2_utl) || 0;
+        const m3 = (Number(subData.elec_ms2_mix_on_peak) || 0) + (Number(subData.elec_ms2_mix_off_peak) || 0) || Number(subData.elec_meter3_ms2_mix) || 0;
+
+        const solar1 = Number(subData.solar_meter1_ms2) || 0;
+        const solar2 = Number(subData.solar_meter2_tf) || 0;
+
         const sludge = (Number(subData.sludge_tons) || 0) + (Number(subData.sludge_vac_tons) || 0);
         const fuel = (Number(subData.fuel_oil_a_ms1_liter) || 0) + (Number(subData.fuel_oil_a_ms2_liter) || 0) + (Number(subData.fuel_oil_a_ms3_liter) || 0) || Number(subData.fuel_oil_a_total_liter) || Number(subData.fuel_oil_a_liter) || 0;
         const fuelBaht = Number(subData.fuel_oil_a_baht) || 0;
         const sludgeBaht = Number(subData.sludge_grand_total_baht) || Number(subData.sludge_total_baht) || 0;
         const sludgeTrips = Number(subData.sludge_trips) || 0;
 
+        totalKpiElec += (m1 + m2 + m3);
+        totalKpiSolar += (solar1 + solar2);
         totalKpiSludgeTons += sludge;
         totalKpiSludgeTrips += sludgeTrips;
         totalKpiSludgeCost += sludgeBaht;
@@ -265,6 +279,9 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
 
       setFuelLiter(fuelLiterVal);
       setFuelCost(fuelCostVal);
+      setKpiElecTotal(totalKpiElec);
+      setKpiSolarTotal(totalKpiSolar);
+      setKpiSludgeTons(sludgeVal);
 
       setOpsRows([
         {
@@ -532,13 +549,13 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
           <div className="py-2.5 px-2 border-r border-white/10">
             <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">ไฟฟ้ารวมทั้งหมด</p>
             <p className="text-base font-black text-emerald-400 mt-0.5">
-              {fCom(grandTotalElec)} <span className="text-xs font-bold">kWh</span>
+              {fCom(kpiElecTotal)} <span className="text-xs font-bold">kWh</span>
             </p>
           </div>
           <div className="py-2.5 px-2 border-r border-white/10">
             <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">โซลาร์เซลล์รวม</p>
             <p className="text-base font-black text-emerald-400 mt-0.5">
-              {fCom(grandTotalSolar)} <span className="text-xs font-bold">kWh</span>
+              {fCom(kpiSolarTotal)} <span className="text-xs font-bold">kWh</span>
             </p>
           </div>
           <div className="py-2.5 px-2 border-r border-white/10">
@@ -550,7 +567,7 @@ export const EnergyReportView: React.FC<EnergyReportViewProps> = ({
           <div className="py-2.5 px-2">
             <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">การกำจัดตะกอน</p>
             <p className="text-base font-black text-emerald-400 mt-0.5">
-              {fCom(totalSludgeTons)} <span className="text-xs font-bold">Ton</span>
+              {fCom(kpiSludgeTons)} <span className="text-xs font-bold">Ton</span>
             </p>
           </div>
         </div>
