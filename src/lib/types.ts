@@ -220,6 +220,7 @@ export interface PondSubmission {
   report_time: string; // HH:mm
   reporter_name: string;
   image_url?: string | null;
+  image_urls?: string[]; // Multiple photos support
   remarks?: string;
   metrics: Record<string, number | string>; // e.g. { cod_in: 120, ph: 7.2, do: 3.5, ch4: 65 }
   created_at?: string;

@@ -182,11 +182,8 @@ export const PondEntryForm: React.FC<PondEntryFormProps> = ({
   // Dynamic Metrics State
   const [metrics, setMetrics] = useState<Record<string, string>>({});
 
-  // Image Upload & Compression States
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [compressedBase64, setCompressedBase64] = useState<string | null>(null);
-  const [imageSizeKb, setImageSizeKb] = useState<number | null>(null);
+  // Multiple Image Upload & Compression States
+  const [imagesList, setImagesList] = useState<{ id: string; base64: string; sizeKb: number }[]>([]);
 
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -206,37 +203,46 @@ export const PondEntryForm: React.FC<PondEntryFormProps> = ({
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // Handle File Select & Client-side Compression
+  // Handle File Select & Client-side Compression for Multiple Images
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setIsCompressing(true);
-    setImageFile(file);
 
     try {
-      // Compress image to max 1200x1200 with 0.75 quality (~150-300 KB)
-      const compressed = await compressImage(file, 1200, 1200, 0.75);
-      setCompressedBase64(compressed);
-      setImagePreview(compressed);
+      const newCompressedImages: { id: string; base64: string; sizeKb: number }[] = [];
 
-      // Calculate compressed size in KB
-      const stringLength = compressed.length - 'data:image/jpeg;base64,'.length;
-      const sizeInBytes = 4 * Math.ceil(stringLength / 3) * 0.5624896;
-      setImageSizeKb(Math.round(sizeInBytes / 1024));
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // Compress image to max 1200x1200 with 0.75 quality (~150-300 KB)
+        const compressed = await compressImage(file, 1200, 1200, 0.75);
+
+        // Calculate compressed size in KB
+        const stringLength = compressed.length - 'data:image/jpeg;base64,'.length;
+        const sizeInBytes = 4 * Math.ceil(stringLength / 3) * 0.5624896;
+        const sizeKb = Math.round(sizeInBytes / 1024);
+
+        newCompressedImages.push({
+          id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          base64: compressed,
+          sizeKb,
+        });
+      }
+
+      setImagesList((prev) => [...prev, ...newCompressedImages]);
     } catch (err) {
       console.error('Compression failed:', err);
       triggerNotify('error', 'เกิดข้อผิดพลาดในการบีบอัดรูปภาพ');
     } finally {
       setIsCompressing(false);
+      // Reset input value so same files can be re-selected if needed
+      e.target.value = '';
     }
   };
 
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setCompressedBase64(null);
-    setImageSizeKb(null);
+  const handleRemoveSingleImage = (idToRemove: string) => {
+    setImagesList((prev) => prev.filter((img) => img.id !== idToRemove));
   };
 
   const handleMetricChange = (key: string, val: string) => {
@@ -262,13 +268,16 @@ export const PondEntryForm: React.FC<PondEntryFormProps> = ({
       }
     });
 
+    const imageUrlsArray = imagesList.map((img) => img.base64);
+
     const res = await savePondSubmission({
       pond_id: activePond.id,
       pond_name: activePond.name,
       report_date: reportDate,
       report_time: reportTime,
       reporter_name: reporterName,
-      image_url: compressedBase64,
+      image_url: imageUrlsArray[0] || null,
+      image_urls: imageUrlsArray,
       remarks,
       metrics: formattedMetrics,
     });
@@ -279,7 +288,7 @@ export const PondEntryForm: React.FC<PondEntryFormProps> = ({
       triggerNotify('success', `บันทึกข้อมูล ${activePond.category} สำเร็จเรียบร้อยแล้ว!`);
       setMetrics({});
       setRemarks('');
-      handleRemoveImage();
+      setImagesList([]);
       if (onSuccess) onSuccess();
     } else {
       triggerNotify('error', res.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
@@ -419,45 +428,76 @@ export const PondEntryForm: React.FC<PondEntryFormProps> = ({
           </div>
         </div>
 
-        {/* Section 3: Photo Upload with Canvas Auto-Compression */}
+        {/* Section 3: Multiple Photo Upload with Canvas Auto-Compression */}
         <div className="space-y-4 border-b border-slate-100 pb-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-sky-600" />
-              <span>3. แนบรูปถ่ายหน้างาน (Photo Attachment)</span>
+              <span>3. แนบรูปถ่ายหน้างาน (อัปโหลดได้หลายรูป)</span>
             </h3>
             <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-              ⚡ บีบอัดอัตโนมัติ (~150-300 KB)
+              ⚡ บีบอัดอัตโนมัติ (~150-300 KB/รูป)
             </span>
           </div>
 
-          {!imagePreview ? (
-            <label className="border-2 border-dashed border-slate-300 hover:border-sky-500 bg-slate-50 hover:bg-sky-50/40 p-6 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all">
-              <div className="w-12 h-12 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center">
-                {isCompressing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
-              </div>
-              <span className="text-xs font-bold text-slate-700">
-                {isCompressing ? 'กำลังบีบอัดรูปภาพ...' : 'คลิกเพื่อเลือกรูปถ่าย หรือถ่ายรูปจากมือถือ'}
-              </span>
-              <span className="text-[10px] text-slate-400 font-semibold">รองรับไฟล์ JPG, PNG, WEBP</span>
-              <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} className="hidden" />
-            </label>
-          ) : (
-            <div className="relative inline-block border border-slate-200 rounded-2xl overflow-hidden bg-slate-900 p-2 space-y-2">
-              <img src={imagePreview} alt="Pond Field Preview" className="max-h-56 rounded-xl object-cover block mx-auto shadow-md" />
-              <div className="flex items-center justify-between px-2 text-[11px] text-slate-300 font-bold">
-                <span className="text-emerald-400 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>บีบอัดแล้วเรียบร้อย ({imageSizeKb} KB)</span>
-                </span>
+          {/* Upload Drop Zone / Add More Button */}
+          <label className="border-2 border-dashed border-slate-300 hover:border-sky-500 bg-slate-50 hover:bg-sky-50/40 p-5 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all">
+            <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center">
+              {isCompressing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+            </div>
+            <span className="text-xs font-bold text-slate-700">
+              {isCompressing
+                ? 'กำลังบีบอัดรูปภาพ...'
+                : imagesList.length > 0
+                ? '+ คลิกเพื่อแนบรูปเพิ่ม (เลือกได้หลายรูป)'
+                : 'คลิกเพื่อเลือกรูปถ่าย หรือถ่ายรูปจากมือถือ (เลือกได้มากกว่า 1 รูป)'}
+            </span>
+            <span className="text-[10px] text-slate-400 font-semibold">รองรับไฟล์ JPG, PNG, WEBP</span>
+            <input type="file" accept="image/*" multiple capture="environment" onChange={handleImageChange} className="hidden" />
+          </label>
+
+          {/* Images Thumbnails Grid with Individual X Deletion */}
+          {imagesList.length > 0 && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span>รูปภาพที่เลือกไว้ ({imagesList.length} รูป):</span>
                 <button
                   type="button"
-                  onClick={handleRemoveImage}
-                  className="text-rose-400 hover:text-rose-300 flex items-center gap-1 bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+                  onClick={() => setImagesList([])}
+                  className="text-[11px] text-rose-600 hover:text-rose-700 font-extrabold flex items-center gap-1 cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>ลบรูปภาพ</span>
+                  <span>ลบทั้งหมด</span>
                 </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {imagesList.map((imgItem, idx) => (
+                  <div
+                    key={imgItem.id}
+                    className="relative group rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 shadow-sm"
+                  >
+                    <img
+                      src={imgItem.base64}
+                      alt={`Upload ${idx + 1}`}
+                      className="w-full h-32 object-cover block"
+                    />
+                    {/* Individual X Deletion Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSingleImage(imgItem.id)}
+                      className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-black text-xs flex items-center justify-center shadow-lg transition-all cursor-pointer border border-white/40"
+                      title="กด ✕ เพื่อลบรูปนี้"
+                    >
+                      ✕
+                    </button>
+
+                    <div className="absolute bottom-0 inset-x-0 bg-slate-900/90 backdrop-blur-xs px-2 py-1 flex items-center justify-between text-[10px] text-slate-300 font-bold">
+                      <span>รูปที่ {idx + 1}</span>
+                      <span className="text-emerald-400 font-extrabold">{imgItem.sizeKb} KB</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

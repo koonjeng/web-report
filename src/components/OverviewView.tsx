@@ -668,23 +668,36 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                 </p>
               </div>
 
-              {/* Photo Preview if Available */}
-              {sub?.image_url && (
-                <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 p-1.5 shadow-md">
-                  <img
-                    src={sub.image_url}
-                    alt={`Photo of ${activeModalZone.name}`}
-                    className="w-full max-h-48 object-cover rounded-xl block"
-                  />
-                  <div className="p-2 text-center text-[10px] text-slate-300 font-bold flex items-center justify-between">
-                    <span className="flex items-center gap-1">
-                      <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
-                      <span>รูปถ่ายสภาพผิวน้ำ/หน้างาน</span>
+              {/* Photo Gallery Preview if Available */}
+              {((sub?.image_urls && sub.image_urls.length > 0) || sub?.image_url) && (() => {
+                const photos = sub.image_urls && sub.image_urls.length > 0 ? sub.image_urls : [sub.image_url!];
+                return (
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-bold text-slate-700 flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-sky-800">
+                        <ImageIcon className="w-3.5 h-3.5 text-sky-600" />
+                        <span>รูปถ่ายหน้างาน ({photos.length} รูป):</span>
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-semibold">บันทึกโดย: {sub.reporter_name}</span>
                     </span>
-                    <span className="text-slate-400">บันทึกโดย: {sub.reporter_name}</span>
+
+                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1 rounded-2xl border border-slate-200 bg-slate-900 shadow-inner">
+                      {photos.map((photoUrl, pIdx) => (
+                        <div key={pIdx} className="rounded-xl overflow-hidden border border-slate-800 relative group">
+                          <img
+                            src={photoUrl}
+                            alt={`Photo ${pIdx + 1} of ${activeModalZone.name}`}
+                            className="w-full h-24 object-cover block"
+                          />
+                          <span className="absolute bottom-1 right-1 bg-slate-950/80 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">
+                            #{pIdx + 1}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Key Metrics Grid (Dynamic from submission or defaults) */}
               <div className="grid grid-cols-2 gap-2.5 pt-1">
