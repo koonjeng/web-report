@@ -23,6 +23,9 @@ import {
   History,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { UserRole, FullMonthlyReportData } from '@/lib/types';
 import { getCategorySubmissions } from '@/lib/supabase';
@@ -57,6 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenLogin,
 }) => {
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   const monthlyPendingCount = reportsData.filter((r) => r.report.status === 'pending').length;
   const pendingCount = monthlyPendingCount;
@@ -137,12 +141,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Top Header & Menu */}
       <div className="flex flex-col min-h-0 overflow-y-auto">
         {/* Brand Header */}
-        <div className="p-6 flex items-center justify-between border-b border-slate-700/60 shrink-0">
-          <div className="overflow-hidden">
-            <h1 className="font-bold text-lg leading-tight tracking-wide text-slate-100 truncate">
-              TDC Utility
-            </h1>
-          </div>
+        <div className="p-4 flex items-center justify-between border-b border-slate-700/60 shrink-0">
+          {!isSidebarCollapsed ? (
+            <div className="overflow-hidden">
+              <h1 className="font-black text-base leading-tight tracking-wide text-slate-100 truncate">
+                TDC Utility
+              </h1>
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center font-black text-slate-950 mx-auto">
+              T
+            </div>
+          )}
+
+          {/* Desktop Toggle Sidebar Button */}
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="hidden md:flex text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-all cursor-pointer"
+            title={isSidebarCollapsed ? 'ขยายแถบเมนู (Expand Sidebar)' : 'พับแถบเมนูไปทางซ้าย (Collapse Sidebar)'}
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen className="w-5 h-5 text-sky-400" /> : <PanelLeftClose className="w-5 h-5" />}
+          </button>
+
           {/* Close button on mobile */}
           <button
             onClick={() => setMobileOpen(false)}
@@ -153,27 +173,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation Menu Grouped by Category */}
-        <nav className="p-4 space-y-5 flex-1">
+        <nav className="p-3 space-y-4 flex-1">
           {menuCategories.map((cat, catIdx) => {
             const isCollapsed = Boolean(collapsedCategories[cat.title]);
 
             return (
               <div key={catIdx} className="space-y-1">
-                {/* Category Header with Collapse Toggle */}
-                <button
-                  type="button"
-                  onClick={() => toggleCategory(cat.title)}
-                  className="w-full flex items-center justify-between px-3 py-1 text-[10px] font-black uppercase tracking-wider text-sky-400/90 hover:text-sky-300 transition-colors cursor-pointer group"
-                >
-                  <span>{cat.title}</span>
-                  <div className="text-sky-400/60 group-hover:text-sky-300">
-                    {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </div>
-                </button>
+                {/* Category Header with Collapse Toggle (Hidden when sidebar is mini collapsed) */}
+                {!isSidebarCollapsed && (
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(cat.title)}
+                    className="w-full flex items-center justify-between px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-sky-400/90 hover:text-sky-300 transition-colors cursor-pointer group"
+                  >
+                    <span className="truncate">{cat.title}</span>
+                    <div className="text-sky-400/60 group-hover:text-sky-300">
+                      {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </div>
+                  </button>
+                )}
 
                 {/* Collapsible Menu Items */}
-                {!isCollapsed && (
-                  <div className="space-y-1 pl-0.5 pt-0.5 animate-fadeIn">
+                {(!isCollapsed || isSidebarCollapsed) && (
+                  <div className="space-y-1 pt-0.5 animate-fadeIn">
                     {cat.items.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
@@ -181,16 +203,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <button
                           key={item.id}
                           onClick={() => handleNavClick(item.id)}
-                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer ${isActive
+                          title={isSidebarCollapsed ? item.label : undefined}
+                          className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer ${isActive
                             ? 'bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/20'
                             : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-semibold'
                             }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-sky-400'}`} />
-                            <span className="truncate">{item.label}</span>
+                            <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? 'text-slate-950' : 'text-sky-400'}`} />
+                            {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
                           </div>
-                          {item.badge !== null && (
+                          {!isSidebarCollapsed && item.badge !== null && (
                             <span
                               className={`px-2 py-0.5 text-[10px] font-black rounded-full ${isActive ? 'bg-slate-950 text-sky-400' : 'bg-amber-500 text-slate-950 animate-pulse'
                                 }`}
@@ -210,51 +233,66 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* User Info / Role Footer */}
-      <div className="p-4 border-t border-slate-700/60 bg-slate-900/80 shrink-0 mt-auto">
+      <div className="p-3 border-t border-slate-700/60 bg-slate-900/80 shrink-0 mt-auto">
         {currentUser ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+          <div className="space-y-2">
+            {!isSidebarCollapsed ? (
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-sky-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className="text-xs font-semibold text-slate-200 truncate"
+                    title={currentUser.email}
+                  >
+                    {currentUser.email}
+                  </p>
+                  <span className="inline-block px-1.5 py-0.5 text-[10px] uppercase font-extrabold rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                    {currentUser.role}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto" title={currentUser.email}>
                 <ShieldCheck className="w-4 h-4 text-sky-400" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p
-                  className="text-xs font-semibold text-slate-200 truncate"
-                  title={currentUser.email}
-                >
-                  {currentUser.email}
-                </p>
-                <span className="inline-block px-1.5 py-0.5 text-[10px] uppercase font-extrabold rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                  {currentUser.role}
-                </span>
-              </div>
-            </div>
+            )}
 
             <button
               onClick={() => {
                 onLogout();
                 setMobileOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-slate-300 bg-slate-800/90 hover:bg-rose-950/40 hover:text-rose-300 hover:border-rose-800/50 rounded-xl border border-slate-700 transition-all shadow-xs"
+              title={isSidebarCollapsed ? 'ออกจากระบบ' : undefined}
+              className={`w-full flex items-center justify-center gap-2 ${isSidebarCollapsed ? 'p-2' : 'px-3 py-2'} text-xs font-semibold text-slate-300 bg-slate-800/90 hover:bg-rose-950/40 hover:text-rose-300 hover:border-rose-800/50 rounded-xl border border-slate-700 transition-all shadow-xs`}
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>ออกจากระบบ</span>
+              <LogOut className="w-4 h-4" />
+              {!isSidebarCollapsed && <span>ออกจากระบบ</span>}
             </button>
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-slate-300">
-              <UserCheck className="w-4 h-4 text-sky-400 shrink-0" />
-              <span className="truncate">โหมดพนักงานลงข้อมูล (No Login)</span>
-            </div>
+            {!isSidebarCollapsed ? (
+              <div className="flex items-center gap-2 text-xs text-slate-300">
+                <UserCheck className="w-4 h-4 text-sky-400 shrink-0" />
+                <span className="truncate">โหมดพนักงานลงข้อมูล</span>
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto" title="โหมดพนักงานลงข้อมูล">
+                <UserCheck className="w-4 h-4 text-sky-400" />
+              </div>
+            )}
             <button
               onClick={() => {
                 onOpenLogin();
                 setMobileOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-white bg-sky-700 hover:bg-sky-600 rounded-xl transition-all border border-sky-600 shadow-sm"
+              title={isSidebarCollapsed ? 'เข้าสู่ระบบ' : undefined}
+              className={`w-full flex items-center justify-center gap-2 ${isSidebarCollapsed ? 'p-2' : 'px-3 py-2'} text-xs font-semibold text-white bg-sky-700 hover:bg-sky-600 rounded-xl transition-all border border-sky-600 shadow-sm`}
             >
-              เข้าสู่ระบบสำหรับ ผู้อนุมัติ
+              <ShieldCheck className="w-4 h-4" />
+              {!isSidebarCollapsed && <span>เข้าสู่ระบบ ผู้อนุมัติ</span>}
             </button>
           </div>
         )}
@@ -299,7 +337,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* DESKTOP SIDEBAR (Visible on screens >= md) */}
-      <aside className="hidden md:flex w-64 bg-[#1e293b] text-white flex-col justify-between h-screen sticky top-0 shadow-xl z-20 shrink-0 border-r border-slate-700/50">
+      <aside className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#1e293b] text-white flex-col justify-between h-screen sticky top-0 shadow-xl z-20 shrink-0 border-r border-slate-700/50`}>
         {navContent}
       </aside>
     </>

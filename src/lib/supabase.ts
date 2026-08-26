@@ -785,3 +785,67 @@ export async function savePondSubmission(submission: Omit<import('./types').Pond
   saveLocalPondSubmission(newSubmission);
   return { success: true };
 }
+
+export async function updatePondSubmission(
+  id: string,
+  updatedFields: Partial<import('./types').PondSubmission>
+): Promise<boolean> {
+  // 1. Update in LocalStorage
+  if (typeof window !== 'undefined') {
+    const current = getLocalPondSubmissions();
+    const idx = current.findIndex((item) => item.id === id);
+    if (idx !== -1) {
+      current[idx] = { ...current[idx], ...updatedFields };
+      localStorage.setItem(POND_SUBMISSIONS_STORAGE_KEY, JSON.stringify(current));
+    }
+  }
+
+  // 2. Update in Supabase
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('pond_submissions')
+        .update(updatedFields)
+        .eq('id', id);
+
+      if (error) {
+        console.error('Update pond_submission error:', error);
+        return false;
+      }
+      return true;
+    } catch (e: any) {
+      console.error('Update pond_submission exception:', e);
+      return false;
+    }
+  }
+  return true;
+}
+
+export async function deletePondSubmission(id: string): Promise<boolean> {
+  // 1. Delete from LocalStorage
+  if (typeof window !== 'undefined') {
+    const current = getLocalPondSubmissions();
+    const filtered = current.filter((item) => item.id !== id);
+    localStorage.setItem(POND_SUBMISSIONS_STORAGE_KEY, JSON.stringify(filtered));
+  }
+
+  // 2. Delete from Supabase
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('pond_submissions')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Delete pond_submission error:', error);
+        return false;
+      }
+      return true;
+    } catch (e: any) {
+      console.error('Delete pond_submission exception:', e);
+      return false;
+    }
+  }
+  return true;
+}

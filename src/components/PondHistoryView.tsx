@@ -18,9 +18,12 @@ import {
   ExternalLink,
   Layers,
   ArrowUpDown,
+  Edit3,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import { PondSubmission, UserRole } from '@/lib/types';
-import { fetchPondSubmissions } from '@/lib/supabase';
+import { fetchPondSubmissions, updatePondSubmission, deletePondSubmission } from '@/lib/supabase';
 import { POND_DEFINITIONS } from './PondEntryForm';
 
 interface PondHistoryViewProps {
@@ -45,6 +48,19 @@ export const PondHistoryView: React.FC<PondHistoryViewProps> = ({
   const [selectedSubmission, setSelectedSubmission] = useState<PondSubmission | null>(null);
   const [selectedFullPhoto, setSelectedFullPhoto] = useState<string | null>(null);
 
+  // Edit Modal States
+  const [editingItem, setEditingItem] = useState<PondSubmission | null>(null);
+  const [editDate, setEditDate] = useState<string>('');
+  const [editTime, setEditTime] = useState<string>('');
+  const [editReporter, setEditReporter] = useState<string>('');
+  const [editRemarks, setEditRemarks] = useState<string>('');
+  const [editMetrics, setEditMetrics] = useState<Record<string, string>>({});
+  const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
+
+  // Delete Confirm Modal State
+  const [deletingItem, setDeletingItem] = useState<PondSubmission | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
   const loadHistory = async () => {
     setLoading(true);
     const data = await fetchPondSubmissions();
@@ -55,6 +71,72 @@ export const PondHistoryView: React.FC<PondHistoryViewProps> = ({
   useEffect(() => {
     loadHistory();
   }, []);
+
+  const handleOpenEdit = (item: PondSubmission) => {
+    setEditingItem(item);
+    setEditDate(item.report_date);
+    setEditTime(item.report_time || '00:00');
+    setEditReporter(item.reporter_name);
+    setEditRemarks(item.remarks || '');
+
+    const metricsStrObj: Record<string, string> = {};
+    if (item.metrics) {
+      Object.entries(item.metrics).forEach(([k, v]) => {
+        metricsStrObj[k] = String(v);
+      });
+    }
+    setEditMetrics(metricsStrObj);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItem) return;
+    setIsSavingEdit(true);
+
+    const formattedMetrics: Record<string, number | string> = {};
+    Object.entries(editMetrics).forEach(([k, v]) => {
+      if (v !== '') {
+        const num = Number(v);
+        formattedMetrics[k] = isNaN(num) ? v : num;
+      }
+    });
+
+    const success = await updatePondSubmission(editingItem.id, {
+      report_date: editDate,
+      report_time: editTime,
+      reporter_name: editReporter,
+      remarks: editRemarks,
+      metrics: formattedMetrics,
+    });
+
+    setIsSavingEdit(false);
+    if (success) {
+      setEditingItem(null);
+      if (selectedSubmission?.id === editingItem.id) {
+        setSelectedSubmission(null);
+      }
+      loadHistory();
+    } else {
+      alert('เกิดข้อผิดพลาดในการบันทึกการแก้ไข');
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingItem) return;
+    setIsDeleting(true);
+
+    const success = await deletePondSubmission(deletingItem.id);
+    setIsDeleting(false);
+
+    if (success) {
+      setDeletingItem(null);
+      if (selectedSubmission?.id === deletingItem.id) {
+        setSelectedSubmission(null);
+      }
+      loadHistory();
+    } else {
+      alert('เกิดข้อผิดพลาดในการลบรายการ');
+    }
+  };
 
   // Filter logic
   const filteredSubmissions = submissions.filter((item) => {
@@ -298,16 +380,46 @@ export const PondHistoryView: React.FC<PondHistoryViewProps> = ({
                         </div>
                       </td>
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedSubmission(item);
-                          }}
-                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] rounded-lg transition-all shadow-xs cursor-pointer inline-flex items-center gap-1"
-                        >
-                          <span>ดูรายละเอียด</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedSubmission(item);
+                            }}
+                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-[11px] rounded-lg transition-all border border-slate-300 cursor-pointer inline-flex items-center gap-1"
+                            title="ดูรายละเอียด"
+                          >
+                            <span>ดู</span>
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEdit(item);
+                            }}
+                            className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-[11px] rounded-lg transition-all cursor-pointer inline-flex items-center gap-1"
+                            title="แก้ไขรายการนี้"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-amber-700" />
+                            <span>แก้ไข</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingItem(item);
+                            }}
+                            className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-extrabold text-[11px] rounded-lg transition-all cursor-pointer inline-flex items-center gap-1"
+                            title="ลบรายการนี้"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                            <span>ลบ</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -408,22 +520,169 @@ export const PondHistoryView: React.FC<PondHistoryViewProps> = ({
         </div>
       )}
 
-      {/* FULL SCREEN PHOTO ZOOM MODAL */}
-      {selectedFullPhoto && (
-        <div
-          onClick={() => setSelectedFullPhoto(null)}
-          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fadeIn cursor-pointer"
-        >
-          <div className="relative max-w-4xl max-h-[85vh] overflow-hidden rounded-2xl border border-slate-700 shadow-2xl">
-            <img src={selectedFullPhoto} alt="Full Size Photo" className="w-full h-full object-contain max-h-[80vh] block" />
+      {/* EDIT SUBMISSION MODAL */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-lg bg-white rounded-3xl border border-amber-200 shadow-2xl overflow-hidden p-6 space-y-4 relative max-h-[90vh] overflow-y-auto animate-scaleUp">
+            {/* Close Button */}
             <button
-              onClick={() => setSelectedFullPhoto(null)}
-              className="absolute top-3 right-3 bg-slate-900/80 hover:bg-slate-900 text-white w-9 h-9 rounded-full font-black text-sm flex items-center justify-center border border-slate-700 shadow-lg cursor-pointer"
+              onClick={() => setEditingItem(null)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition-all cursor-pointer"
             >
               ✕
             </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black px-3 py-1 rounded-xl bg-amber-500 text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>แก้ไขรายการประวัติ ({editingItem.pond_name})</span>
+              </span>
+            </div>
+
+            <div className="space-y-4 pt-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700">วันที่ตรวจวัด (Date):</label>
+                  <input
+                    type="date"
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700">เวลาตรวจวัด (Time):</label>
+                  <input
+                    type="time"
+                    value={editTime}
+                    onChange={(e) => setEditTime(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-slate-700">ผู้บันทึกข้อมูล:</label>
+                <input
+                  type="text"
+                  value={editReporter}
+                  onChange={(e) => setEditReporter(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Metrics Fields Edit */}
+              <div className="space-y-2 border-t border-slate-100 pt-3">
+                <label className="block text-xs font-black text-slate-800 uppercase tracking-wider">
+                  แก้ไขพารามิเตอร์ตรวจวัด:
+                </label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {Object.entries(editMetrics).map(([key, val]) => (
+                    <div key={key} className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 block uppercase">{key.replace('_', ' ')}</span>
+                      <input
+                        type="text"
+                        value={val}
+                        onChange={(e) =>
+                          setEditMetrics((prev) => ({ ...prev, [key]: e.target.value }))
+                        }
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-black text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-slate-700">หมายเหตุ:</label>
+                <input
+                  type="text"
+                  value={editRemarks}
+                  onChange={(e) => setEditRemarks(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  disabled={isSavingEdit}
+                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isSavingEdit ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>กำลังบันทึกการแก้ไข...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                      <span>บันทึกการเปลี่ยนแปลง</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingItem(null)}
+                  className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl transition-all cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
           </div>
-          <p className="text-xs font-bold text-slate-300 mt-3">คลิกที่ใดก็ได้เพื่อปิดรูปภาพภาพใหญ่</p>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deletingItem && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-sm bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden p-6 space-y-4 text-center animate-scaleUp">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">
+                ยืนยันการลบรายการนี้?
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium">
+                รายการประวัติของ <strong className="text-slate-800">{deletingItem.pond_name}</strong> ประจำวันที่ {deletingItem.report_date.split('-').reverse().join('/')} จะถูกลบถาวร
+              </p>
+            </div>
+
+            <div className="pt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>กำลังลบ...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>ยืนยันลบรายการ</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeletingItem(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
