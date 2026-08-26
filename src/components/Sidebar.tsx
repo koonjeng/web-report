@@ -21,6 +21,8 @@ import {
   Map,
   Droplets,
   History,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { UserRole, FullMonthlyReportData } from '@/lib/types';
 import { getCategorySubmissions } from '@/lib/supabase';
@@ -61,7 +63,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const hasRole = Boolean(currentUser && (currentUser.role === 'admin' || currentUser.role === 'approver'));
 
-  // Grouped Menu Categories with Overview at the VERY TOP
+  // State to track collapsed categories (key: category title -> boolean)
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+
+  const toggleCategory = (title: string) => {
+    setCollapsedCategories((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
+
+  // Menu categories organized EXACTLY as requested by user
   const menuCategories: MenuCategory[] = [
     {
       title: 'ภาพรวมระบบ & การวิเคราะห์',
@@ -72,11 +84,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ],
     },
     {
-      title: 'บันทึกข้อมูล & บำรุงรักษา',
+      title: 'บันทึกข้อมูล & การทำงาน',
       items: [
-        { id: 'pond-entry', label: 'ลงข้อมูลบ่อบำบัด (Pond Entry)', icon: Droplets, badge: null },
-        { id: 'pond-history', label: 'ประวัติลงข้อมูลบ่อบำบัด', icon: History, badge: null },
         { id: 'data-entry', label: 'Daily Report ลงข้อมูลรายวัน', icon: FileSpreadsheet, badge: null },
+        { id: 'pond-entry', label: 'Pond Entry ลงข้อมูลบ่อบำบัด', icon: Droplets, badge: null },
         { id: 'maintenance', label: 'PM งานซ่อมบำรุง', icon: Wrench, badge: null },
       ],
     },
@@ -90,21 +101,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Clock,
       badge: pendingCount > 0 ? pendingCount : null,
     });
-    adminItems.push({ id: 'history', label: 'History ประวัติบันทึก', icon: Database, badge: null });
+    adminItems.push({ id: 'history', label: 'History ประวัติบันทึกระบบ', icon: Database, badge: null });
+  }
+
+  // Everyone or Role based items in Group 3
+  adminItems.push({ id: 'pond-history', label: 'Pond History ประวัติลงข้อมูลบ่อบำบัด', icon: History, badge: null });
+
+  if (hasRole) {
     adminItems.push({ id: 'troubleshooting', label: 'Troubleshoot คู่มือแก้ปัญหา', icon: ShieldAlert, badge: null });
-    adminItems.push({ id: 'playbook', label: 'คู่มือการทำงาน', icon: BookOpen, badge: null });
   }
 
   if (currentUser?.role === 'admin') {
-    adminItems.push({ id: 'users', label: 'จัดการผู้ใช้งาน', icon: Users, badge: null });
+    adminItems.push({ id: 'users', label: 'จัดการผู้ใช้งาน (Users)', icon: Users, badge: null });
   }
 
-  if (adminItems.length > 0) {
-    menuCategories.push({
-      title: 'การอนุมัติ & จัดการระบบ',
-      items: adminItems,
-    });
-  }
+  menuCategories.push({
+    title: 'การอนุมัติ & จัดการระบบ',
+    items: adminItems,
+  });
 
   if (currentUser) {
     menuCategories.push({
@@ -140,40 +154,58 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation Menu Grouped by Category */}
         <nav className="p-4 space-y-5 flex-1">
-          {menuCategories.map((cat, catIdx) => (
-            <div key={catIdx} className="space-y-1.5">
-              <p className="px-3 text-[10px] font-black uppercase tracking-wider text-sky-400/90">
-                {cat.title}
-              </p>
-              {cat.items.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavClick(item.id)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer ${isActive
-                      ? 'bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/20'
-                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-semibold'
-                      }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-sky-400'}`} />
-                      <span className="truncate">{item.label}</span>
-                    </div>
-                    {item.badge !== null && (
-                      <span
-                        className={`px-2 py-0.5 text-[10px] font-black rounded-full ${isActive ? 'bg-slate-950 text-sky-400' : 'bg-amber-500 text-slate-950 animate-pulse'
-                          }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+          {menuCategories.map((cat, catIdx) => {
+            const isCollapsed = Boolean(collapsedCategories[cat.title]);
+
+            return (
+              <div key={catIdx} className="space-y-1">
+                {/* Category Header with Collapse Toggle */}
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(cat.title)}
+                  className="w-full flex items-center justify-between px-3 py-1 text-[10px] font-black uppercase tracking-wider text-sky-400/90 hover:text-sky-300 transition-colors cursor-pointer group"
+                >
+                  <span>{cat.title}</span>
+                  <div className="text-sky-400/60 group-hover:text-sky-300">
+                    {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </div>
+                </button>
+
+                {/* Collapsible Menu Items */}
+                {!isCollapsed && (
+                  <div className="space-y-1 pl-0.5 pt-0.5 animate-fadeIn">
+                    {cat.items.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleNavClick(item.id)}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer ${isActive
+                            ? 'bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/20'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-semibold'
+                            }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-sky-400'}`} />
+                            <span className="truncate">{item.label}</span>
+                          </div>
+                          {item.badge !== null && (
+                            <span
+                              className={`px-2 py-0.5 text-[10px] font-black rounded-full ${isActive ? 'bg-slate-950 text-sky-400' : 'bg-amber-500 text-slate-950 animate-pulse'
+                                }`}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
       </div>
 
