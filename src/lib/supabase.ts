@@ -664,3 +664,124 @@ export async function updateCategorySubmissionData(
   }
   return false;
 }
+
+// -------------------------------------------------------------
+// POND SUBMISSIONS & IMAGE COMPRESSION (Overview Pond Log Entry)
+// -------------------------------------------------------------
+
+const POND_SUBMISSIONS_STORAGE_KEY = 'tdc_pond_submissions_v1';
+
+// Compress image on client side using HTML5 Canvas
+export async function compressImage(file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.75): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(event.target?.result as string);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedBase64);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
+
+export function getLocalPondSubmissions(): import('./types').PondSubmission[] {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem(POND_SUBMISSIONS_STORAGE_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch { }
+  }
+  return [];
+}
+
+export function saveLocalPondSubmission(submission: import('./types').PondSubmission): void {
+  if (typeof window === 'undefined') return;
+  const current = getLocalPondSubmissions();
+  current.unshift(submission);
+  localStorage.setItem(POND_SUBMISSIONS_STORAGE_KEY, JSON.stringify(current));
+}
+
+export async function fetchPondSubmissions(): Promise<import('./types').PondSubmission[]> {
+  let supabasePonds: import('./types').PondSubmission[] = [];
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('pond_submissions')
+        .select('*')
+        .order('report_date', { ascending: false });
+
+      if (!error && data) {
+        supabasePonds = data as import('./types').PondSubmission[];
+      }
+    } catch (e) {
+      console.warn('Fetch pond_submissions warning, loading local fallback:', e);
+    }
+  }
+
+  const localPonds = getLocalPondSubmissions();
+  const mergedMap = new Map<string, import('./types').PondSubmission>();
+
+  supabasePonds.forEach((p) => mergedMap.set(p.id, p));
+  localPonds.forEach((p) => mergedMap.set(p.id, p));
+
+  return Array.from(mergedMap.values()).sort((a, b) => {
+    const dateTimeA = `${a.report_date} ${a.report_time || '00:00'}`;
+    const dateTimeB = `${b.report_date} ${b.report_time || '00:00'}`;
+    return dateTimeB.localeCompare(dateTimeA);
+  });
+}
+
+export async function savePondSubmission(submission: Omit<import('./types').PondSubmission, 'id' | 'created_at'>): Promise<{ success: boolean; error?: string }> {
+  const id = `pond-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+  const newSubmission: import('./types').PondSubmission = {
+    ...submission,
+    id,
+    created_at: new Date().toISOString(),
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase.from('pond_submissions').upsert([newSubmission]);
+      if (error) {
+        console.warn('Supabase pond_submissions save warning (saved to local):', error.message);
+      }
+    } catch (e: any) {
+      console.warn('Supabase pond_submissions save exception (saved to local):', e);
+    }
+  }
+
+  saveLocalPondSubmission(newSubmission);
+  return { success: true };
+}

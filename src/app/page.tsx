@@ -15,6 +15,7 @@ import { MaintenanceView } from '@/components/MaintenanceView';
 import { TroubleshootingView } from '@/components/TroubleshootingView';
 import { EnergyReportView } from '@/components/EnergyReportView';
 import { OverviewView } from '@/components/OverviewView';
+import { PondEntryForm } from '@/components/PondEntryForm';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { UserRole, FullMonthlyReportData, ReportData } from '@/lib/types';
 import { fetchReportsData, saveReportData, addAuditLog } from '@/lib/supabase';
@@ -28,6 +29,7 @@ export default function Home() {
   const [availableYears, setAvailableYears] = useState<number[]>([2570, 2569, 2568, 2567, 2566]);
   const [selectedMonth, setSelectedMonth] = useState<number>(5); // May by default
   const [currentUser, setCurrentUser] = useState<{ email: string; role: UserRole } | null>(null);
+  const [activePondEntryId, setActivePondEntryId] = useState<string>('polishing-1');
 
   const [reportsData, setReportsData] = useState<FullMonthlyReportData[]>([]);
   const [prevReportsData, setPrevReportsData] = useState<FullMonthlyReportData[]>([]);
@@ -231,7 +233,24 @@ export default function Home() {
             )
           )}
 
-          {activeTab === 'overview' && <OverviewView />}
+          {activeTab === 'overview' && (
+            <OverviewView
+              onNavigateToPondEntry={(pondId) => {
+                setActivePondEntryId(pondId);
+                handleTabChange('pond-entry');
+              }}
+            />
+          )}
+
+          {activeTab === 'pond-entry' && (
+            <PondEntryForm
+              currentUser={currentUser}
+              initialPondId={activePondEntryId}
+              onSuccess={() => {
+                handleTabChange('overview');
+              }}
+            />
+          )}
 
           {activeTab === 'data-entry' && (
             <DataEntryForm

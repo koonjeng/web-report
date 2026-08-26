@@ -211,3 +211,16 @@ export interface CategorySubmission {
   data: Partial<ReportData>;
   created_at: string;
 }
+
+export interface PondSubmission {
+  id: string;
+  pond_id: string; // e.g. 'polishing-1', 'biogas-1', 'as', 'aeration', 'clarify', etc.
+  pond_name: string; // e.g. 'Polishing 1', 'Biogas 1'
+  report_date: string; // YYYY-MM-DD
+  report_time: string; // HH:mm
+  reporter_name: string;
+  image_url?: string | null;
+  remarks?: string;
+  metrics: Record<string, number | string>; // e.g. { cod_in: 120, ph: 7.2, do: 3.5, ch4: 65 }
+  created_at?: string;
+}

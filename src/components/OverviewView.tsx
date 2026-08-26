@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Map,
   Layers,
@@ -16,7 +14,15 @@ import {
   Eye,
   CheckCircle2,
   TrendingUp,
+  Calendar,
+  Clock,
+  PlusCircle,
+  ImageIcon,
+  AlertCircle,
+  UserCheck,
 } from 'lucide-react';
+import { PondSubmission } from '@/lib/types';
+import { fetchPondSubmissions } from '@/lib/supabase';
 
 interface ZoneMarker {
   id: string;
@@ -31,6 +37,10 @@ interface ZoneMarker {
   metrics: { label: string; value: string; unit: string }[];
   polygonPoints: [number, number][];
   labelCenter: [number, number]; // [x%, y%] location of pond name text badge
+}
+
+interface OverviewViewProps {
+  onNavigateToPondEntry?: (pondId: string) => void;
 }
 
 // 10 zones exactly matched with names written on the image:
@@ -269,20 +279,48 @@ const ZONES: ZoneMarker[] = [
   },
 ];
 
-export const OverviewView: React.FC = () => {
+export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntry }) => {
   const [selectedZone, setSelectedZone] = useState<ZoneMarker | null>(ZONES[0]);
   const [hoveredZone, setHoveredZone] = useState<ZoneMarker | null>(null);
   const [activeModalZone, setActiveModalZone] = useState<ZoneMarker | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Date & Time Filter States (Default: today)
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [filterDate, setFilterDate] = useState<string>(todayStr);
+
+  // Submissions Data
+  const [submissions, setSubmissions] = useState<PondSubmission[]>([]);
+  const [loadingPonds, setLoadingPonds] = useState<boolean>(true);
+
+  const loadPondData = async () => {
+    setLoadingPonds(true);
+    const data = await fetchPondSubmissions();
+    setSubmissions(data);
+    setLoadingPonds(false);
+  };
+
+  useEffect(() => {
+    loadPondData();
+  }, []);
 
   const handleZoneClick = (zone: ZoneMarker) => {
     setSelectedZone(zone);
     setActiveModalZone(zone);
   };
 
+  // Helper to find submission for a specific zone matching selected filterDate
+  const getSubmissionForZone = (zoneId: string): PondSubmission | undefined => {
+    return submissions.find(
+      (s) => (s.pond_id === zoneId || s.pond_id.replace('-', '') === zoneId.replace('-', '')) && s.report_date === filterDate
+    ) || submissions.find(
+      (s) => s.pond_id === zoneId || s.pond_id.replace('-', '') === zoneId.replace('-', '')
+    );
+  };
+
   return (
     <div className="space-y-6 p-4 md:p-8 bg-slate-50 min-h-[calc(100vh-73px)] font-sans text-slate-800 pb-24">
-      {/* Header Banner */}
+      {/* Header Banner & Date Filter Bar */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
@@ -293,26 +331,40 @@ export const OverviewView: React.FC = () => {
             </span>
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            สามารถ <strong className="text-sky-700">คลิกที่ชื่อป้ายตัวหนังสือบ่อบนภาพ</strong> หรือคลิกรายชื่อด้านขวาเพื่อดูข้อมูลการทำงานได้ทันที
+            เลือกวันที่และคลิกที่ <strong className="text-sky-700">ป้ายชื่อบ่อในภาพ</strong> เพื่อดูข้อมูลและรูปถ่ายหน้างานตรงตามวันที่เลือก
           </p>
         </div>
 
-        <button
-          onClick={() => setIsFullscreen(!isFullscreen)}
-          className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer shadow-md transition-all shrink-0 self-start md:self-auto"
-        >
-          {isFullscreen ? (
-            <>
-              <Minimize2 className="w-4 h-4 text-sky-400" />
-              <span>ย่อขนาด</span>
-            </>
-          ) : (
-            <>
-              <Maximize2 className="w-4 h-4 text-sky-400" />
-              <span>ขยายเต็มจอ</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Filter Date Picker */}
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 shadow-xs">
+            <Calendar className="w-4 h-4 text-sky-600 shrink-0" />
+            <span className="text-xs font-bold text-slate-700 shrink-0">วันที่เรียกดู:</span>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="bg-transparent text-xs font-extrabold text-slate-900 focus:outline-none cursor-pointer"
+            />
+          </div>
+
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer shadow-md transition-all shrink-0"
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-4 h-4 text-sky-400" />
+                <span>ย่อขนาด</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-4 h-4 text-sky-400" />
+                <span>ขยายเต็มจอ</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* TOP 3 SUMMARY KPI CARDS MATCHING EXACT USER SCREENSHOT */}
@@ -565,78 +617,129 @@ export const OverviewView: React.FC = () => {
       </div>
 
       {/* POPUP MODAL CARD WHEN CLICKING POND NAME BADGE */}
-      {activeModalZone && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-          <div
-            className={`w-full max-w-md bg-white rounded-3xl border shadow-2xl overflow-hidden p-6 space-y-5 relative animate-scaleUp ${activeModalZone.borderColor}`}
-          >
-            {/* Close Button */}
-            <button
-              onClick={() => setActiveModalZone(null)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition-all cursor-pointer"
+      {activeModalZone && (() => {
+        const sub = getSubmissionForZone(activeModalZone.id);
+        const isMatchDate = sub?.report_date === filterDate;
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+            <div
+              className={`w-full max-w-md bg-white rounded-3xl border shadow-2xl overflow-hidden p-6 space-y-4 relative max-h-[90vh] overflow-y-auto animate-scaleUp ${activeModalZone.borderColor}`}
             >
-              ✕
-            </button>
-
-            {/* Header Badge */}
-            <div className="flex items-center gap-2">
-              <span className={`text-xs font-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider ${activeModalZone.badgeBg}`}>
-                {activeModalZone.category}
-              </span>
-            </div>
-
-            {/* Title & Description */}
-            <div>
-              <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">
-                {activeModalZone.name}
-              </h3>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed font-medium">
-                {activeModalZone.description}
-              </p>
-            </div>
-
-            {/* Key Metrics Grid */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              {activeModalZone.metrics.map((m, idx) => (
-                <div key={idx} className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/90 text-center">
-                  <span className="text-xs font-bold text-slate-500 block">{m.label}</span>
-                  <div className="text-xl font-black text-slate-900 mt-1 tracking-tight">
-                    {m.value} <span className="text-xs font-extrabold text-slate-500">{m.unit}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Parameters checklist */}
-            <div className="pt-3 border-t border-slate-100 space-y-2">
-              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
-                พารามิเตอร์และตัววัดหลัก:
-              </span>
-              <div className="space-y-1.5">
-                {activeModalZone.details.map((d, idx) => (
-                  <div
-                    key={idx}
-                    className="text-xs font-bold px-3.5 py-2 rounded-xl bg-slate-100/90 text-slate-800 border border-slate-200 flex items-center gap-2"
-                  >
-                    <TrendingUp className="w-4 h-4 text-sky-600 shrink-0" />
-                    <span>{d}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Modal Bottom Close Action Button */}
-            <div className="pt-2">
+              {/* Close Button */}
               <button
                 onClick={() => setActiveModalZone(null)}
-                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black rounded-2xl shadow-md transition-all cursor-pointer"
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition-all cursor-pointer"
               >
-                ตกลง / ปิดหน้าต่างนี้
+                ✕
               </button>
+
+              {/* Header Badge & Date Match Indicator */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-xs font-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider ${activeModalZone.badgeBg}`}>
+                  {activeModalZone.category}
+                </span>
+                {sub ? (
+                  isMatchDate ? (
+                    <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>ข้อมูลวันที่ {filterDate.split('-').reverse().join('/')}</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>ข้อมูลล่าสุดเมื่อ {sub.report_date.split('-').reverse().join('/')}</span>
+                    </span>
+                  )
+                ) : (
+                  <span className="text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-1 rounded-full">
+                    ยังไม่มีการลงข้อมูล
+                  </span>
+                )}
+              </div>
+
+              {/* Title & Description */}
+              <div>
+                <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">
+                  {activeModalZone.name}
+                </h3>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed font-medium">
+                  {activeModalZone.description}
+                </p>
+              </div>
+
+              {/* Photo Preview if Available */}
+              {sub?.image_url && (
+                <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 p-1.5 shadow-md">
+                  <img
+                    src={sub.image_url}
+                    alt={`Photo of ${activeModalZone.name}`}
+                    className="w-full max-h-48 object-cover rounded-xl block"
+                  />
+                  <div className="p-2 text-center text-[10px] text-slate-300 font-bold flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
+                      <span>รูปถ่ายสภาพผิวน้ำ/หน้างาน</span>
+                    </span>
+                    <span className="text-slate-400">บันทึกโดย: {sub.reporter_name}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Key Metrics Grid (Dynamic from submission or defaults) */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                {sub && Object.keys(sub.metrics).length > 0 ? (
+                  Object.entries(sub.metrics).map(([key, val], idx) => (
+                    <div key={idx} className="bg-slate-50 p-3 rounded-2xl border border-slate-200/90 text-center">
+                      <span className="text-[11px] font-bold text-slate-500 block uppercase">{key.replace('_', ' ')}</span>
+                      <div className="text-lg font-black text-slate-900 mt-0.5 tracking-tight">
+                        {val}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  activeModalZone.metrics.map((m, idx) => (
+                    <div key={idx} className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/90 text-center">
+                      <span className="text-xs font-bold text-slate-500 block">{m.label}</span>
+                      <div className="text-xl font-black text-slate-900 mt-1 tracking-tight">
+                        {m.value} <span className="text-xs font-extrabold text-slate-500">{m.unit}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {sub?.remarks && (
+                <div className="bg-sky-50 p-3 rounded-xl border border-sky-200 text-xs text-sky-950 font-medium">
+                  <strong>หมายเหตุหน้างาน:</strong> {sub.remarks}
+                </div>
+              )}
+
+              {/* Action Buttons: Navigate to Pond Entry or Close */}
+              <div className="pt-2 flex items-center gap-2">
+                {onNavigateToPondEntry && (
+                  <button
+                    onClick={() => {
+                      setActiveModalZone(null);
+                      onNavigateToPondEntry(activeModalZone.id);
+                    }}
+                    className="flex-1 py-3 bg-sky-600 hover:bg-sky-500 text-white text-xs font-black rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    <span>+ ลงข้อมูลบ่อนี้นี้</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setActiveModalZone(null)}
+                  className="py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black rounded-2xl shadow-md transition-all cursor-pointer"
+                >
+                  ปิด
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
