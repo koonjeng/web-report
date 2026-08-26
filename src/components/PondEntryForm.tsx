@@ -365,16 +365,20 @@ export const PondEntryForm: React.FC<PondEntryFormProps> = ({
 
             {/* Date */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700">วันที่ตรวจวัด (Date)</label>
-              <div className="relative">
-                <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+              <label className="block text-xs font-bold text-slate-700">วันที่ตรวจวัด (Date: dd/mm/yyyy)</label>
+              <div className="relative flex items-center">
+                <Calendar className="w-4 h-4 text-sky-600 absolute left-3 pointer-events-none z-10" />
                 <input
                   type="date"
                   required
                   value={reportDate}
                   onChange={(e) => setReportDate(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none cursor-pointer"
+                  style={{ color: 'transparent', caretColor: 'transparent' }}
                 />
+                <span className="absolute left-9 pointer-events-none text-xs font-black text-slate-900">
+                  {reportDate ? reportDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
+                </span>
               </div>
             </div>
 

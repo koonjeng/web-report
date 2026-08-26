@@ -283,6 +283,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
   const [selectedZone, setSelectedZone] = useState<ZoneMarker | null>(ZONES[0]);
   const [hoveredZone, setHoveredZone] = useState<ZoneMarker | null>(null);
   const [activeModalZone, setActiveModalZone] = useState<ZoneMarker | null>(null);
+  const [selectedFullPhoto, setSelectedFullPhoto] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   // Date & Time Filter States (Default: today)
@@ -337,15 +338,21 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
 
         <div className="flex items-center gap-3 flex-wrap">
           {/* Filter Date Picker */}
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 shadow-xs">
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 shadow-xs relative">
             <Calendar className="w-4 h-4 text-sky-600 shrink-0" />
             <span className="text-xs font-bold text-slate-700 shrink-0">วันที่เรียกดู:</span>
-            <input
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="bg-transparent text-xs font-extrabold text-slate-900 focus:outline-none cursor-pointer"
-            />
+            <div className="relative flex items-center">
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="w-24 bg-transparent text-xs font-black text-slate-900 focus:outline-none cursor-pointer"
+                style={{ color: 'transparent', caretColor: 'transparent' }}
+              />
+              <span className="absolute left-0 pointer-events-none text-xs font-black text-slate-900">
+                {filterDate ? filterDate.split('-').reverse().join('/') : 'dd/mm/yyyy'}
+              </span>
+            </div>
           </div>
 
           <button
@@ -668,7 +675,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                 </p>
               </div>
 
-              {/* Photo Gallery Preview if Available */}
+              {/* Photo Gallery Preview if Available (Clickable for full screen) */}
               {((sub?.image_urls && sub.image_urls.length > 0) || sub?.image_url) && (() => {
                 const photos = sub.image_urls && sub.image_urls.length > 0 ? sub.image_urls : [sub.image_url!];
                 return (
@@ -676,19 +683,28 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                     <span className="text-[11px] font-bold text-slate-700 flex items-center justify-between">
                       <span className="flex items-center gap-1 text-sky-800">
                         <ImageIcon className="w-3.5 h-3.5 text-sky-600" />
-                        <span>รูปถ่ายหน้างาน ({photos.length} รูป):</span>
+                        <span>รูปถ่ายหน้างาน ({photos.length} รูป - คลิกเพื่อดูรูปใหญ่):</span>
                       </span>
                       <span className="text-[10px] text-slate-400 font-semibold">บันทึกโดย: {sub.reporter_name}</span>
                     </span>
 
-                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1 rounded-2xl border border-slate-200 bg-slate-900 shadow-inner">
+                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1.5 rounded-2xl border border-slate-200 bg-slate-900 shadow-inner">
                       {photos.map((photoUrl, pIdx) => (
-                        <div key={pIdx} className="rounded-xl overflow-hidden border border-slate-800 relative group">
+                        <div
+                          key={pIdx}
+                          onClick={() => setSelectedFullPhoto(photoUrl)}
+                          className="rounded-xl overflow-hidden border border-slate-800 relative group cursor-pointer hover:border-sky-400 transition-all"
+                        >
                           <img
                             src={photoUrl}
                             alt={`Photo ${pIdx + 1} of ${activeModalZone.name}`}
-                            className="w-full h-24 object-cover block"
+                            className="w-full h-24 object-cover block group-hover:scale-105 transition-all"
                           />
+                          <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                            <span className="text-[10px] font-black text-white bg-sky-600/90 px-2 py-0.5 rounded-md shadow-md">
+                              🔍 คลิกดูขยาย
+                            </span>
+                          </div>
                           <span className="absolute bottom-1 right-1 bg-slate-950/80 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">
                             #{pIdx + 1}
                           </span>
@@ -699,26 +715,27 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                 );
               })()}
 
-              {/* Key Metrics Grid (Dynamic from submission or defaults) */}
-              <div className="grid grid-cols-2 gap-2.5 pt-1">
+              {/* Key Metrics Grid (Purely Real Data according to user request) */}
+              <div className="pt-1 space-y-2">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  พารามิเตอร์ตรวจวัดล่าสุด:
+                </span>
                 {sub && Object.keys(sub.metrics).length > 0 ? (
-                  Object.entries(sub.metrics).map(([key, val], idx) => (
-                    <div key={idx} className="bg-slate-50 p-3 rounded-2xl border border-slate-200/90 text-center">
-                      <span className="text-[11px] font-bold text-slate-500 block uppercase">{key.replace('_', ' ')}</span>
-                      <div className="text-lg font-black text-slate-900 mt-0.5 tracking-tight">
-                        {val}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {Object.entries(sub.metrics).map(([key, val], idx) => (
+                      <div key={idx} className="bg-slate-50 p-3 rounded-2xl border border-slate-200/90 text-center">
+                        <span className="text-[11px] font-bold text-slate-500 block uppercase">{key.replace('_', ' ')}</span>
+                        <div className="text-lg font-black text-slate-900 mt-0.5 tracking-tight">
+                          {val}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 ) : (
-                  activeModalZone.metrics.map((m, idx) => (
-                    <div key={idx} className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/90 text-center">
-                      <span className="text-xs font-bold text-slate-500 block">{m.label}</span>
-                      <div className="text-xl font-black text-slate-900 mt-1 tracking-tight">
-                        {m.value} <span className="text-xs font-extrabold text-slate-500">{m.unit}</span>
-                      </div>
-                    </div>
-                  ))
+                  <div className="p-4 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300 space-y-1">
+                    <p className="text-xs font-bold text-slate-600">ยังไม่มีข้อมูลการตรวจวัดในวันที่เลือก</p>
+                    <p className="text-[11px] text-slate-400 font-medium">กดปุ่ม "+ ลงข้อมูลบ่อนี้นี้" ด้านล่างเพื่อเริ่มบันทึกข้อมูล</p>
+                  </div>
                 )}
               </div>
 
@@ -753,6 +770,29 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
           </div>
         );
       })()}
+
+      {/* FULL SCREEN PHOTO ZOOM MODAL */}
+      {selectedFullPhoto && (
+        <div
+          onClick={() => setSelectedFullPhoto(null)}
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fadeIn cursor-pointer"
+        >
+          <div className="relative max-w-4xl max-h-[85vh] overflow-hidden rounded-2xl border border-slate-700 shadow-2xl">
+            <img
+              src={selectedFullPhoto}
+              alt="Full Size Photo"
+              className="w-full h-full object-contain max-h-[80vh] block"
+            />
+            <button
+              onClick={() => setSelectedFullPhoto(null)}
+              className="absolute top-3 right-3 bg-slate-900/80 hover:bg-slate-900 text-white w-9 h-9 rounded-full font-black text-sm flex items-center justify-center border border-slate-700 shadow-lg cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-xs font-bold text-slate-300 mt-3">คลิกที่ใดก็ได้เพื่อปิดรูปภาพภาพใหญ่</p>
+        </div>
+      )}
     </div>
   );
 };
