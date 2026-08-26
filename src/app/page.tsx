@@ -16,6 +16,7 @@ import { TroubleshootingView } from '@/components/TroubleshootingView';
 import { EnergyReportView } from '@/components/EnergyReportView';
 import { OverviewView } from '@/components/OverviewView';
 import { PondEntryForm } from '@/components/PondEntryForm';
+import { PondHistoryView } from '@/components/PondHistoryView';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { UserRole, FullMonthlyReportData, ReportData } from '@/lib/types';
 import { fetchReportsData, saveReportData, addAuditLog } from '@/lib/supabase';
@@ -248,6 +249,16 @@ export default function Home() {
               initialPondId={activePondEntryId}
               onSuccess={() => {
                 handleTabChange('overview');
+              }}
+            />
+          )}
+
+          {activeTab === 'pond-history' && (
+            <PondHistoryView
+              currentUser={currentUser}
+              onNavigateToPondEntry={(pondId) => {
+                setActivePondEntryId(pondId);
+                handleTabChange('pond-entry');
               }}
             />
           )}

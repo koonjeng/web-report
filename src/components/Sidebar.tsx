@@ -20,6 +20,7 @@ import {
   FileText,
   Map,
   Droplets,
+  History,
 } from 'lucide-react';
 import { UserRole, FullMonthlyReportData } from '@/lib/types';
 import { getCategorySubmissions } from '@/lib/supabase';
@@ -74,6 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'บันทึกข้อมูล & บำรุงรักษา',
       items: [
         { id: 'pond-entry', label: 'ลงข้อมูลบ่อบำบัด (Pond Entry)', icon: Droplets, badge: null },
+        { id: 'pond-history', label: 'ประวัติลงข้อมูลบ่อบำบัด', icon: History, badge: null },
         { id: 'data-entry', label: 'Daily Report ลงข้อมูลรายวัน', icon: FileSpreadsheet, badge: null },
         { id: 'maintenance', label: 'PM งานซ่อมบำรุง', icon: Wrench, badge: null },
       ],
