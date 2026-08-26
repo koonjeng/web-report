@@ -219,6 +219,9 @@ export interface PondSubmission {
   report_date: string; // YYYY-MM-DD
   report_time: string; // HH:mm
   reporter_name: string;
+  status: 'pending' | 'approved' | 'rejected';
+  approver_name?: string;
+  reject_reason?: string | null;
   image_url?: string | null;
   image_urls?: string[]; // Multiple photos support
   remarks?: string;

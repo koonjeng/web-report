@@ -270,12 +270,17 @@ export const PondEntryForm: React.FC<PondEntryFormProps> = ({
 
     const imageUrlsArray = imagesList.map((img) => img.base64);
 
+    // If user has no role (Guest / พนักงานทั่วไป), status is 'pending'. If Admin/Approver, status is 'approved'.
+    const isGuest = !currentUser || !currentUser.role || (currentUser.role !== 'admin' && currentUser.role !== 'approver');
+    const submissionStatus = isGuest ? 'pending' : 'approved';
+
     const res = await savePondSubmission({
       pond_id: activePond.id,
       pond_name: activePond.name,
       report_date: reportDate,
       report_time: reportTime,
       reporter_name: reporterName,
+      status: submissionStatus,
       image_url: imageUrlsArray[0] || null,
       image_urls: imageUrlsArray,
       remarks,
@@ -285,7 +290,10 @@ export const PondEntryForm: React.FC<PondEntryFormProps> = ({
     setSubmitting(false);
 
     if (res.success) {
-      triggerNotify('success', `บันทึกข้อมูล ${activePond.category} สำเร็จเรียบร้อยแล้ว!`);
+      const msg = isGuest
+        ? `บันทึกข้อมูล ${activePond.name} เรียบร้อยแล้ว (ส่งเข้า Pending เพื่อรอหัวหน้าอนุมัติ)`
+        : `บันทึกข้อมูล ${activePond.name} สำเร็จเรียบร้อยแล้ว!`;
+      triggerNotify('success', msg);
       setMetrics({});
       setRemarks('');
       setImagesList([]);

@@ -317,6 +317,7 @@ export const PondHistoryView: React.FC<PondHistoryViewProps> = ({
                   <th className="py-3.5 px-4 text-center w-12">#</th>
                   <th className="py-3.5 px-4">วันที่ & เวลา</th>
                   <th className="py-3.5 px-4">บ่อบำบัด (Pond)</th>
+                  <th className="py-3.5 px-4 text-center">สถานะ</th>
                   <th className="py-3.5 px-4">พารามิเตอร์ตรวจวัด (Metrics)</th>
                   <th className="py-3.5 px-4 text-center">รูปถ่าย</th>
                   <th className="py-3.5 px-4">ผู้บันทึก</th>
@@ -328,6 +329,7 @@ export const PondHistoryView: React.FC<PondHistoryViewProps> = ({
                   const photosCount = (item.image_urls && item.image_urls.length > 0)
                     ? item.image_urls.length
                     : item.image_url ? 1 : 0;
+                  const itemStatus = item.status || 'approved';
 
                   return (
                     <tr
@@ -350,6 +352,23 @@ export const PondHistoryView: React.FC<PondHistoryViewProps> = ({
                         <span className="bg-sky-100 text-sky-900 border border-sky-200 px-2.5 py-1 rounded-lg text-xs">
                           {item.pond_name}
                         </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        {itemStatus === 'pending' && (
+                          <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-[10px] animate-pulse">
+                            ⏳ รออนุมัติ
+                          </span>
+                        )}
+                        {itemStatus === 'approved' && (
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold text-[10px]">
+                            ✓ อนุมัติแล้ว
+                          </span>
+                        )}
+                        {itemStatus === 'rejected' && (
+                          <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-900 border border-rose-300 font-extrabold text-[10px]">
+                            ✕ ปฏิเสธ
+                          </span>
+                        )}
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="flex flex-wrap gap-1.5 max-w-md">

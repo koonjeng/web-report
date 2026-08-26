@@ -16,9 +16,17 @@ import {
   Leaf,
   Flame,
 } from 'lucide-react';
-import { FullMonthlyReportData, UserRole, CategorySubmission } from '@/lib/types';
+import { FullMonthlyReportData, UserRole, CategorySubmission, PondSubmission } from '@/lib/types';
 import { calculateMetrics, MONTH_NAMES_TH } from '@/lib/calculations';
-import { getCategorySubmissions, updateCategorySubmissionStatus, isSupabaseConfigured, supabase } from '@/lib/supabase';
+import {
+  getCategorySubmissions,
+  updateCategorySubmissionStatus,
+  isSupabaseConfigured,
+  supabase,
+  fetchPondSubmissions,
+  updatePondSubmission,
+  deletePondSubmission,
+} from '@/lib/supabase';
 import { MaintenanceHistoryRecord, MaintenanceTask } from './MaintenanceView';
 import { DataEntryForm } from './DataEntryForm';
 
@@ -40,6 +48,16 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
   onInspectReport,
 }) => {
   const [categorySubmissions, setCategorySubmissions] = useState<CategorySubmission[]>([]);
+  const [pondSubmissions, setPondSubmissions] = useState<PondSubmission[]>([]);
+
+  const loadAllPondSubs = async () => {
+    const data = await fetchPondSubmissions();
+    setPondSubmissions(data);
+  };
+
+  useEffect(() => {
+    loadAllPondSubs();
+  }, []);
 
   useEffect(() => {
     async function loadSubs() {
@@ -96,7 +114,11 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
     return categorySubmissions.filter((s) => s.status === 'pending');
   }, [categorySubmissions]);
 
-  const totalPendingCount = pendingSubmissions.length + pendingMaintRecords.length;
+  const pendingPondSubmissions = useMemo(() => {
+    return pondSubmissions.filter((p) => p.status === 'pending');
+  }, [pondSubmissions]);
+
+  const totalPendingCount = pendingSubmissions.length + pendingMaintRecords.length + pendingPondSubmissions.length;
 
   const handleApproveMaintRecord = async (record: MaintenanceHistoryRecord) => {
     // 1. Update status in history
@@ -117,6 +139,28 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
 
     triggerNotify(`อนุมัติการซ่อมบำรุง "${record.equipment}" เรียบร้อยแล้ว`);
     setTimeout(() => window.location.reload(), 1200);
+  };
+
+  const handleApprovePondSubmission = async (pItem: PondSubmission) => {
+    let approverName = currentUser?.email || 'Approver';
+    const success = await updatePondSubmission(pItem.id, {
+      status: 'approved',
+      approver_name: approverName,
+    });
+    if (success) {
+      triggerNotify(`อนุมัติข้อมูลบ่อบำบัด "${pItem.pond_name}" เรียบร้อยแล้ว!`);
+      loadAllPondSubs();
+    }
+  };
+
+  const handleRejectPondSubmission = async (pItem: PondSubmission) => {
+    const success = await updatePondSubmission(pItem.id, {
+      status: 'rejected',
+    });
+    if (success) {
+      triggerNotify(`ตีกลับ/ปฏิเสธรายการ "${pItem.pond_name}" เรียบร้อยแล้ว`);
+      loadAllPondSubs();
+    }
   };
 
   const handleRejectMaintRecord = async (recordId: string) => {
@@ -221,6 +265,73 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
         </div>
       ) : (
         <div className="space-y-4">
+          {/* POND ENTRY PENDING ITEMS */}
+          {pendingPondSubmissions.map((pItem) => {
+            const displayD = pItem.report_date ? pItem.report_date.split('-').reverse().join('/') : '-';
+
+            return (
+              <div
+                key={pItem.id}
+                className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all border-l-4 border-l-sky-500"
+              >
+                <div className="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-sky-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs">
+                      POND
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-base text-white flex items-center gap-2">
+                        <span>ลงข้อมูลบ่อบำบัด: {pItem.pond_name}</span>
+                      </h3>
+                      <p className="text-xs text-slate-300 flex items-center gap-2 mt-0.5">
+                        <User className="w-3.5 h-3.5 text-sky-400" />
+                        <span>ผู้บันทึก: {pItem.reporter_name || 'พนักงานทั่วไป (ไม่มียศ)'}</span>
+                        <span>•</span>
+                        <Calendar className="w-3.5 h-3.5 text-sky-400" />
+                        <span>วันที่ตรวจวัด: {displayD} ({pItem.report_time || '00:00'} น.)</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => handleApprovePondSubmission(pItem)}
+                      className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <BadgeCheck className="w-4 h-4 text-slate-950" />
+                      <span>อนุมัติข้อมูล</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRejectPondSubmission(pItem)}
+                      className="px-3 py-2 bg-slate-800 hover:bg-rose-950/60 hover:text-rose-300 text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      <span>ปฏิเสธ</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Metrics detail preview */}
+                <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap gap-2 text-xs">
+                  {Object.entries(pItem.metrics || {}).map(([k, v], mIdx) => (
+                    <span
+                      key={mIdx}
+                      className="font-bold bg-white text-slate-800 px-3 py-1 rounded-lg border border-slate-200 shadow-2xs"
+                    >
+                      <strong className="uppercase text-slate-500">{k.replace('_', ' ')}:</strong> {v}
+                    </span>
+                  ))}
+                  {pItem.remarks && (
+                    <span className="w-full text-slate-600 font-semibold italic mt-1">
+                      หมายเหตุ: {pItem.remarks}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
           {/* MAINTENANCE PM PENDING ITEMS */}
           {pendingMaintRecords.map((mRecord) => {
             const parts = mRecord.doneDate ? mRecord.doneDate.split('-') : [];

@@ -763,10 +763,13 @@ export async function fetchPondSubmissions(): Promise<import('./types').PondSubm
   });
 }
 
-export async function savePondSubmission(submission: Omit<import('./types').PondSubmission, 'id' | 'created_at'>): Promise<{ success: boolean; error?: string }> {
+export async function savePondSubmission(
+  submission: Omit<import('./types').PondSubmission, 'id' | 'created_at'>
+): Promise<{ success: boolean; error?: string }> {
   const id = `pond-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
   const newSubmission: import('./types').PondSubmission = {
     ...submission,
+    status: submission.status || 'approved',
     id,
     created_at: new Date().toISOString(),
   };

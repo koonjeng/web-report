@@ -310,11 +310,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
     setActiveModalZone(zone);
   };
 
-  // Helper to find submission for a specific zone matching selected filterDate
+  // Helper to find submission for a specific zone matching selected filterDate (Only APPROVED submissions display on Overview map)
   const getSubmissionForZone = (zoneId: string): PondSubmission | undefined => {
-    return submissions.find(
+    const approvedSubmissions = submissions.filter((s) => s.status === 'approved' || !s.status);
+    return approvedSubmissions.find(
       (s) => (s.pond_id === zoneId || s.pond_id.replace('-', '') === zoneId.replace('-', '')) && s.report_date === filterDate
-    ) || submissions.find(
+    ) || approvedSubmissions.find(
       (s) => s.pond_id === zoneId || s.pond_id.replace('-', '') === zoneId.replace('-', '')
     );
   };
