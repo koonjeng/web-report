@@ -33,134 +33,173 @@ export interface PondDefinition {
   category: string;
   color: string;
   type: 'biogas' | 'treatment' | 'control';
-  fields: { key: string; label: string; unit: string; placeholder: string; defaultValue?: string }[];
+  fields: {
+    key: string;
+    label: string;
+    unit: string;
+    placeholder: string;
+    defaultValue?: string;
+    threshold?: {
+      type: 'range' | 'max_warning_alert';
+      min?: number;
+      max?: number;
+      warnMax?: number;
+      alertMax?: number;
+      hint?: string;
+    };
+  }[];
 }
 
 export const POND_DEFINITIONS: PondDefinition[] = [
   {
-    id: 'polishing-1',
-    name: 'Polishing 1 (บ่อขัดสภาพ 1)',
-    category: 'Polishing 1',
-    color: '#a855f7',
+    id: 'mix-1',
+    name: 'Mix 1 (บ่อผสมและปรับสภาพ 1)',
+    category: 'Mix 1',
+    color: '#3f6593',
     type: 'treatment',
     fields: [
-      { key: 'cod_out', label: 'COD ออก', unit: 'mg/L', placeholder: 'e.g. 150' },
-      { key: 'ph', label: 'ค่า pH', unit: '', placeholder: 'e.g. 7.2' },
-      { key: 'do', label: 'ค่า DO', unit: 'mg/L', placeholder: 'e.g. 2.0' },
-      { key: 'temp', label: 'อุณหภูมิน้ำ', unit: '°C', placeholder: 'e.g. 32' },
-    ],
-  },
-  {
-    id: 'polishing-2',
-    name: 'Polishing 2 (บ่อขัดสภาพ 2 / จุดระบาย)',
-    category: 'Polishing 2',
-    color: '#22c55e',
-    type: 'treatment',
-    fields: [
-      { key: 'cod_effluent', label: 'COD น้ำทิ้งจุดระบาย', unit: 'mg/L', placeholder: 'มาตรฐาน ≤ 120' },
-      { key: 'ph', label: 'ค่า pH', unit: '', placeholder: 'e.g. 7.5' },
-      { key: 'do', label: 'ค่า DO', unit: 'mg/L', placeholder: 'e.g. 3.5' },
-      { key: 'tss', label: 'ค่า TSS', unit: 'mg/L', placeholder: 'e.g. 30' },
-    ],
-  },
-  {
-    id: 'biogas-1',
-    name: 'Biogas 1 (บ่อคลุมผ้า 1)',
-    category: 'Biogas 1',
-    color: '#3b82f6',
-    type: 'biogas',
-    fields: [
-      { key: 'biogas_flow', label: 'Biogas Generation', unit: 'm³/วัน', placeholder: 'e.g. 12000' },
-      { key: 'ch4_pct', label: 'เปอร์เซ็นต์ CH4', unit: '%', placeholder: 'e.g. 62' },
-      { key: 'h2s_ppm', label: 'ก๊าซ H2S', unit: 'ppm', placeholder: 'e.g. 1500' },
-      { key: 'pressure', label: 'แรงดันก๊าซ', unit: 'mbar', placeholder: 'e.g. 15' },
-    ],
-  },
-  {
-    id: 'biogas-2',
-    name: 'Biogas 2 (บ่อคลุมผ้า 2)',
-    category: 'Biogas 2',
-    color: '#06b6d4',
-    type: 'biogas',
-    fields: [
-      { key: 'biogas_flow', label: 'Biogas Generation', unit: 'm³/วัน', placeholder: 'e.g. 14500' },
-      { key: 'ch4_pct', label: 'เปอร์เซ็นต์ CH4', unit: '%', placeholder: 'e.g. 64' },
-      { key: 'h2s_ppm', label: 'ก๊าซ H2S', unit: 'ppm', placeholder: 'e.g. 1200' },
-      { key: 'pressure', label: 'แรงดันก๊าซ', unit: 'mbar', placeholder: 'e.g. 18' },
-    ],
-  },
-  {
-    id: 'aeration',
-    name: 'Aeration (บ่อเติมอากาศหลัก)',
-    category: 'Aeration',
-    color: '#f97316',
-    type: 'treatment',
-    fields: [
-      { key: 'do', label: 'ค่า DO', unit: 'mg/L', placeholder: 'e.g. 2.5' },
-      { key: 'ph', label: 'ค่า pH', unit: '', placeholder: 'e.g. 7.1' },
-      { key: 'sv60', label: 'ค่า SV60', unit: '%', placeholder: 'e.g. 45' },
-      { key: 'mlss', label: 'ค่า MLSS', unit: 'mg/L', placeholder: 'e.g. 3500' },
-    ],
-  },
-  {
-    id: 'as',
-    name: 'AS (ถังเติมอากาศ Activated Sludge)',
-    category: 'AS',
-    color: '#ef4444',
-    type: 'treatment',
-    fields: [
-      { key: 'cod_eff_as', label: 'COD ออกถัง AS', unit: 'mg/L', placeholder: 'e.g. 220' },
-      { key: 'do', label: 'ค่า DO', unit: 'mg/L', placeholder: 'e.g. 3.0' },
-      { key: 'sv60', label: 'ค่า SV60', unit: '%', placeholder: 'e.g. 50' },
-      { key: 'ph', label: 'ค่า pH', unit: '', placeholder: 'e.g. 7.3' },
-    ],
-  },
-  {
-    id: 'clarify',
-    name: 'Clarify (บ่อตกตะกอน Clarifier)',
-    category: 'Clarify',
-    color: '#0284c7',
-    type: 'treatment',
-    fields: [
-      { key: 'clarity_depth', label: 'ความใสผิวน้ำ', unit: 'cm', placeholder: 'e.g. 80' },
-      { key: 'sludge_blanket', label: 'ชั้นความหนาตะกอน', unit: 'm', placeholder: 'e.g. 1.2' },
-      { key: 'ph', label: 'ค่า pH', unit: '', placeholder: 'e.g. 7.4' },
-    ],
-  },
-  {
-    id: 'ss',
-    name: 'SS (บ่อพักตกตะกอน)',
-    category: 'SS',
-    color: '#ec4899',
-    type: 'treatment',
-    fields: [
-      { key: 'tss', label: 'ปริมาณตะกอนแขวนลอย (TSS)', unit: 'mg/L', placeholder: 'e.g. 85' },
-      { key: 'ph', label: 'ค่า pH', unit: '', placeholder: 'e.g. 7.3' },
+      { key: 'flow', label: 'Flow', unit: 'm³/h', placeholder: 'e.g. 120' },
+      {
+        key: 'ph',
+        label: 'pH',
+        unit: '',
+        placeholder: '3.0 - 4.0',
+        threshold: {
+          type: 'range',
+          min: 3.0,
+          max: 4.0,
+          hint: 'ค่าสีเขียวช่วง 3.0 - 4.0 (นอกช่วงนี้เป็นสีแดง)',
+        },
+      },
     ],
   },
   {
     id: 'mix-2',
-    name: 'Mix 2 (บ่อปรับสภาพน้ำเข้าระบบ 2)',
+    name: 'Mix 2 (บ่อผสมและปรับสภาพ 2)',
     category: 'Mix 2',
-    color: '#10b981',
+    color: '#3f6593',
     type: 'treatment',
     fields: [
-      { key: 'inflow_rate', label: 'น้ำเข้าระบบ Inflow', unit: 'm³/วัน', placeholder: 'e.g. 3500' },
-      { key: 'cod_in', label: 'COD น้ำเข้า (Native)', unit: 'mg/L', placeholder: 'e.g. 18000' },
-      { key: 'vfa', label: 'ค่า VFA', unit: 'mg/L', placeholder: 'e.g. 2500' },
-      { key: 'ph', label: 'ค่า pH', unit: '', placeholder: 'e.g. 5.8' },
+      { key: 'flow', label: 'Flow', unit: 'm³/h', placeholder: 'e.g. 115' },
+      {
+        key: 'ph',
+        label: 'pH',
+        unit: '',
+        placeholder: '6.0 - 7.0',
+        threshold: {
+          type: 'range',
+          min: 6.0,
+          max: 7.0,
+          hint: 'ค่าสีเขียวช่วง 6.0 - 7.0 (นอกช่วงนี้เป็นสีแดง)',
+        },
+      },
     ],
   },
   {
-    id: 'scrubber-mw2',
-    name: 'Scrubber / MW 2 (จุดสครับก๊าซและควบคุม)',
-    category: 'Scrubber / MW 2',
-    color: '#6366f1',
+    id: 'scrubber',
+    name: 'Scrubber (จุดสครับก๊าซ / ดัก H2S)',
+    category: 'Scrubber',
+    color: '#3f6593',
     type: 'control',
     fields: [
-      { key: 'h2s_after_scrub', label: 'H2S หลังสครับ', unit: 'ppm', placeholder: 'e.g. 50' },
-      { key: 'temp', label: 'อุณหภูมิก๊าซ', unit: '°C', placeholder: 'e.g. 38' },
-      { key: 'motor_current', label: 'กระแสมอเตอร์ปั๊ม', unit: 'A', placeholder: 'e.g. 14.5' },
+      { key: 'h2s_pct', label: '%H2S', unit: '%', placeholder: 'e.g. 0.05' },
+      { key: 'ch4_pct', label: '%CH4', unit: '%', placeholder: 'e.g. 65' },
+    ],
+  },
+  {
+    id: 'biogas-1',
+    name: 'Biogas 1 (บ่อหมักก๊าซชีวภาพ 1)',
+    category: 'Biogas 1',
+    color: '#3f6593',
+    type: 'biogas',
+    fields: [
+      { key: 'sv60', label: 'SV60', unit: 'mg/L', placeholder: 'e.g. 15' },
+    ],
+  },
+  {
+    id: 'biogas-2',
+    name: 'Biogas 2 (บ่อหมักก๊าซชีวภาพ 2)',
+    category: 'Biogas 2',
+    color: '#3f6593',
+    type: 'biogas',
+    fields: [
+      {
+        key: 'sv60',
+        label: 'SV60',
+        unit: 'mg/L',
+        placeholder: 'e.g. 8',
+        threshold: {
+          type: 'max_warning_alert',
+          warnMax: 10,
+          alertMax: 50,
+          hint: 'เกิน 10 สีส้ม, เกิน 50 สีแดง',
+        },
+      },
+      { key: 'gas_amount_pct', label: 'ปริมาณแก๊ส', unit: '%', placeholder: 'e.g. 75' },
+    ],
+  },
+  {
+    id: 'ss',
+    name: 'SS (บ่อตกตะกอนแขวนลอย)',
+    category: 'SS',
+    color: '#3f6593',
+    type: 'treatment',
+    fields: [
+      { key: 'sv30', label: 'SV30', unit: '', placeholder: 'e.g. 45' },
+    ],
+  },
+  {
+    id: 'as',
+    name: 'AS (บ่อเติมอากาศ Activated Sludge)',
+    category: 'AS',
+    color: '#3f6593',
+    type: 'treatment',
+    fields: [
+      { key: 'water_color', label: 'สีน้ำ', unit: '', placeholder: 'e.g. น้ำตาลเข้ม / ดำ' },
+      { key: 'water_volume', label: 'ปริมาณน้ำ', unit: 'm³', placeholder: 'e.g. 2400' },
+      { key: 'cod', label: 'COD', unit: 'mg/L', placeholder: 'e.g. 180' },
+    ],
+  },
+  {
+    id: 'clarify',
+    name: 'Clarify (รางแยก & บ่อตกตะกอน)',
+    category: 'Clarify',
+    color: '#3f6593',
+    type: 'treatment',
+    fields: [
+      { key: 'water_volume', label: 'ปริมาณน้ำ', unit: 'm³', placeholder: 'e.g. 1800' },
+      { key: 'cod', label: 'COD', unit: 'mg/L', placeholder: 'e.g. 120' },
+    ],
+  },
+  {
+    id: 'aeration',
+    name: 'Aeration (บ่อปรับสภาพ & เติมอากาศดิบ)',
+    category: 'Aeration',
+    color: '#3f6593',
+    type: 'treatment',
+    fields: [
+      { key: 'water_volume', label: 'ปริมาณน้ำ', unit: 'm³', placeholder: 'e.g. 3200' },
+      { key: 'cod', label: 'COD', unit: 'mg/L', placeholder: 'e.g. 12000' },
+    ],
+  },
+  {
+    id: 'polishing-1',
+    name: 'Polishing 1 (บ่อกักเก็บน้ำทิ้งบำบัดแล้ว 1)',
+    category: 'Polishing 1',
+    color: '#3f6593',
+    type: 'treatment',
+    fields: [
+      { key: 'cod', label: 'COD', unit: 'mg/L', placeholder: 'e.g. 85' },
+    ],
+  },
+  {
+    id: 'polishing-2',
+    name: 'Polishing 2 (บ่อกักเก็บน้ำทิ้งบำบัดแล้ว 2)',
+    category: 'Polishing 2',
+    color: '#3f6593',
+    type: 'treatment',
+    fields: [
+      { key: 'cod', label: 'COD', unit: 'mg/L', placeholder: 'e.g. 45' },
     ],
   },
 ];
@@ -423,20 +462,69 @@ export const PondEntryForm: React.FC<PondEntryFormProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
-            {activePond.fields.map((f) => (
-              <div key={f.key} className="space-y-1 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                <label className="block text-xs font-bold text-slate-700">
-                  {f.label} {f.unit && <span className="text-slate-400 font-semibold">({f.unit})</span>}
-                </label>
-                <input
-                  type="text"
-                  value={metrics[f.key] || ''}
-                  onChange={(e) => handleMetricChange(f.key, e.target.value)}
-                  placeholder={f.placeholder}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-black text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                />
-              </div>
-            ))}
+            {activePond.fields.map((f) => {
+              const valStr = metrics[f.key] || '';
+              const valNum = parseFloat(valStr);
+              let statusColor = 'border-slate-300 focus:border-sky-500 text-slate-900';
+              let badgeText = '';
+              let badgeColor = '';
+
+              if (f.threshold && !isNaN(valNum) && valStr.trim() !== '') {
+                if (f.threshold.type === 'range') {
+                  const inRange = valNum >= (f.threshold.min ?? 0) && valNum <= (f.threshold.max ?? 14);
+                  if (inRange) {
+                    statusColor = 'border-emerald-500 bg-emerald-50/50 text-emerald-950 ring-2 ring-emerald-400/30';
+                    badgeText = `✓ ในเกณฑ์ (${f.threshold.min} - ${f.threshold.max})`;
+                    badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                  } else {
+                    statusColor = 'border-rose-500 bg-rose-50/60 text-rose-950 ring-2 ring-rose-400/30';
+                    badgeText = `⚠ นอกเกณฑ์ (${f.threshold.min} - ${f.threshold.max})`;
+                    badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                  }
+                } else if (f.threshold.type === 'max_warning_alert') {
+                  if (valNum > (f.threshold.alertMax ?? 50)) {
+                    statusColor = 'border-rose-500 bg-rose-50/60 text-rose-950 ring-2 ring-rose-400/30';
+                    badgeText = `🔴 สูงผิดปกติ (> ${f.threshold.alertMax})`;
+                    badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                  } else if (valNum > (f.threshold.warnMax ?? 10)) {
+                    statusColor = 'border-amber-500 bg-amber-50/60 text-amber-950 ring-2 ring-amber-400/30';
+                    badgeText = `🟠 เฝ้าระวัง (> ${f.threshold.warnMax})`;
+                    badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+                  } else {
+                    statusColor = 'border-emerald-500 bg-emerald-50/50 text-emerald-950 ring-2 ring-emerald-400/30';
+                    badgeText = `🟢 ปกติ (≤ ${f.threshold.warnMax})`;
+                    badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                  }
+                }
+              }
+
+              return (
+                <div key={f.key} className="space-y-1 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-700">
+                      {f.label} {f.unit && <span className="text-slate-400 font-semibold">({f.unit})</span>}
+                    </label>
+                    {badgeText && (
+                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${badgeColor}`}>
+                        {badgeText}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={valStr}
+                    onChange={(e) => handleMetricChange(f.key, e.target.value)}
+                    placeholder={f.placeholder}
+                    className={`w-full px-3 py-2 bg-white border rounded-xl text-sm font-black focus:outline-none transition-all ${statusColor}`}
+                  />
+                  {f.threshold?.hint && (
+                    <span className="text-[10px] text-slate-400 font-medium block pt-0.5">
+                      💡 {f.threshold.hint}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

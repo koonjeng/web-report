@@ -38,6 +38,8 @@ import {
   CheckSquare,
   Square,
   LayoutGrid,
+  PiggyBank,
+  Calculator,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -169,12 +171,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     wwtEff: true,
     biogasEff: true,
     kpiCost: true,
+    costSaving: true,
   };
   const defaultPanels: Record<string, boolean> = { wwtp: true, biogas: true };
   const defaultCharts: Record<string, boolean> = {
     sludge: true,
     oil: true,
     electric: true,
+    costSaving: true,
     wwtEff: true,
     biogasEff: true,
   };
@@ -227,6 +231,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       wwtEff: select,
       biogasEff: select,
       kpiCost: select,
+      costSaving: select,
     });
   };
 
@@ -250,6 +255,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       sludge: select,
       oil: select,
       electric: select,
+      costSaving: select,
       wwtEff: select,
       biogasEff: select,
     });
@@ -497,6 +503,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     let totalPeaKwh = 0;
     let totalSludgeTons = 0;
     let fuelOilLiterTotal = 0;
+    let totalCostSaving = 0;
 
     if (filteredSubmissions.length > 0) {
       filteredSubmissions.forEach((sub) => {
@@ -508,6 +515,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         totalPeaKwh += m.elecTotalPeaKwh;
         totalSludgeTons += Number(sub.data.sludge_tons || 0) + Number(sub.data.sludge_vac_tons || 0);
         fuelOilLiterTotal += m.fuelOilTotalLiter;
+        totalCostSaving += Number(sub.data.sludge_saving_net_baht || 0);
       });
     } else {
       filteredMonthlyData.forEach((item) => {
@@ -520,6 +528,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           totalPeaKwh += m.elecTotalPeaKwh;
           totalSludgeTons += item.data.sludge_tons || 0;
           fuelOilLiterTotal += m.fuelOilTotalLiter;
+          totalCostSaving += Number(item.data.sludge_saving_net_baht || 0);
         }
       });
     }
@@ -535,6 +544,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       totalPeaKwh,
       totalSludgeTons,
       fuelOilLiterTotal,
+      totalCostSaving,
     };
   }, [filteredMonthlyData, filteredSubmissions]);
 
@@ -560,6 +570,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     let totalPeaKwh = 0;
     let totalSludgeTons = 0;
     let fuelOilLiterTotal = 0;
+    let totalCostSaving = 0;
 
     if (compFilteredSubmissions.length > 0) {
       compFilteredSubmissions.forEach((sub) => {
@@ -570,6 +581,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         totalPeaKwh += m.elecTotalPeaKwh;
         totalSludgeTons += Number(sub.data.sludge_tons || 0) + Number(sub.data.sludge_vac_tons || 0);
         fuelOilLiterTotal += m.fuelOilTotalLiter;
+        totalCostSaving += Number(sub.data.sludge_saving_net_baht || 0);
       });
     } else {
       compFilteredMonthlyData.forEach((item) => {
@@ -581,6 +593,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           totalPeaKwh += m.elecTotalPeaKwh;
           totalSludgeTons += item.data.sludge_tons || 0;
           fuelOilLiterTotal += m.fuelOilTotalLiter;
+          totalCostSaving += Number(item.data.sludge_saving_net_baht || 0);
         }
       });
     }
@@ -595,6 +608,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       totalPeaKwh,
       totalSludgeTons,
       fuelOilLiterTotal,
+      totalCostSaving,
     };
   }, [compFilteredMonthlyData, compFilteredSubmissions]);
 
@@ -721,6 +735,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         oilPrev: mPrev.fuelOilTotalLiter,
         elecKwh: mCurr.elecTotalPeaKwh + mCurr.elecTotalSolarKwh,
         elecPrev: mPrev.elecTotalPeaKwh + mPrev.elecTotalSolarKwh,
+        costSaving: Number(dDataCurr.sludge_saving_net_baht || 0),
+        costSavingPrev: Number(dDataPrev.sludge_saving_net_baht || 0),
         wwtEff: wwtEffCurr,
         wwtEffPrev,
         biogasEff: biogasEffCurr,
@@ -803,6 +819,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       return {
         month: MONTH_SHORT_TH[item.month - 1],
         kwh: val,
+        currentYear: val,
+        prevYear: prevVal,
+      };
+    });
+  }, [filteredMonthlyData, prevMergedMonthlyData, dailyMonthChartItems, chartMode]);
+
+  // 4. Sludge Cost-Saving Chart Data (฿)
+  const costSavingChartData = useMemo(() => {
+    if (chartMode === 'daily') {
+      return dailyMonthChartItems.map((item) => ({
+        month: item.dayLabel,
+        saving: item.costSaving,
+        currentYear: item.costSaving,
+        prevYear: item.costSavingPrev,
+      }));
+    }
+
+    return filteredMonthlyData.map((item) => {
+      const pItem = prevMergedMonthlyData.find((p) => p.month === item.month);
+      const val = item.hasData ? Number(item.data.sludge_saving_net_baht || 0) : 0;
+      const prevVal = pItem?.hasData ? Number(pItem.data.sludge_saving_net_baht || 0) : 0;
+      return {
+        month: MONTH_SHORT_TH[item.month - 1],
+        saving: val,
         currentYear: val,
         prevYear: prevVal,
       };
@@ -927,7 +967,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <span>TDC-Utility Dashboard</span>
+              <span>Energy & Utility Dashboard</span>
               <span className="text-xs bg-sky-100 text-sky-800 font-extrabold px-2.5 py-0.5 rounded-full border border-sky-200">
                 ระบบวิเคราะห์ข้อมูลสด
               </span>
@@ -1204,6 +1244,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className="text-[11px] font-extrabold text-amber-700 mt-0.5">
                   เฉลี่ย ฿{Math.round(currentMetricsSummary.costPerTon).toLocaleString()} บาท/ตัน
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Card 10: KPI Cost Saving (Sludge Cost-Saving) */}
+          {selectedKpis.costSaving && (
+            <div className="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-cyan-50/40 p-4 rounded-2xl shadow-sm border border-emerald-300/80 flex flex-col justify-between h-[135px] hover:shadow-md transition-all relative overflow-hidden group w-full">
+              <span className="text-xs font-extrabold tracking-wide text-emerald-900 uppercase flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <PiggyBank className="w-4 h-4 text-emerald-600" />
+                  <span>KPI Cost Saving</span>
+                </span>
+                <span className="text-[9px] font-mono font-bold bg-emerald-600/15 text-emerald-800 px-1.5 py-0.5 rounded">
+                  ตะกอน
+                </span>
+              </span>
+              <div className="text-center my-auto">
+                <div className="text-xl font-black tracking-wider text-emerald-900">
+                  ฿{formatCompact(currentMetricsSummary.totalCostSaving, 2)}{' '}
+                  <span className="text-xs font-bold text-slate-500">บาท</span>
+                </div>
+                <div className="text-[11px] font-extrabold text-emerald-700 mt-0.5 flex items-center justify-center gap-1">
+                  <span>ประหยัดสะสม</span>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100/80 px-1.5 py-0.2 rounded">
+                    {currentMetricsSummary.totalSludgeTons > 0 && currentMetricsSummary.totalCostSaving > 0
+                      ? `≈ ฿${Math.round(currentMetricsSummary.totalCostSaving / currentMetricsSummary.totalSludgeTons).toLocaleString()}/ตัน`
+                      : 'Sludge Saving'}
+                  </span>
+                </div>
+                {isComparing && (
+                  <div className="text-[11px] font-bold text-emerald-800 mt-1 bg-emerald-100/70 px-2 py-0.5 rounded-md border border-emerald-300 inline-flex items-center gap-1">
+                    <span>เทียบ: ฿{formatCompact(compMetricsSummary.totalCostSaving, 2)}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1547,13 +1621,50 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             )}
 
-            {/* Chart 4: WWT Efficiency Trend */}
+            {/* Chart 4: Sludge Cost-Saving Trend */}
+            {selectedCharts.costSaving && (
+              <div className="bg-white p-5 rounded-2xl border border-emerald-200/90 shadow-sm space-y-3 hover:shadow-md transition-all w-full">
+                <h4 className="font-extrabold text-sm text-slate-900 flex items-center justify-between border-b border-slate-100 pb-2">
+                  <span className="flex items-center gap-2">
+                    <PiggyBank className="w-4 h-4 text-emerald-600" />
+                    <span>4. แนวโน้ม ต้นทุนประหยัดตะกอน (฿)</span>
+                  </span>
+                  <span className="text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
+                    Cost Saving
+                  </span>
+                </h4>
+                <div className="h-[200px] w-full pt-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={costSavingChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                      <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#64748b' }} interval={0} />
+                      <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(v) => formatCompact(v, 0)} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
+                        formatter={(val: any) => [`฿${Number(val || 0).toLocaleString('th-TH')} บาท`, 'ผลประหยัด']}
+                      />
+                      {isComparing || chartMode === 'yoy' ? (
+                        <>
+                          <Legend wrapperStyle={{ fontSize: '11px' }} />
+                          <Bar dataKey="currentYear" name="เดือนหลัก (บาท)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="prevYear" name="เดือนเปรียบเทียบ (บาท)" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
+                        </>
+                      ) : (
+                        <Bar dataKey="saving" name="ผลประหยัด (บาท)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      )}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Chart 5: WWT Efficiency Trend */}
             {selectedCharts.wwtEff && (
               <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-3 hover:shadow-md transition-all w-full">
                 <h4 className="font-extrabold text-sm text-slate-900 flex items-center justify-between border-b border-slate-100 pb-2">
                   <span className="flex items-center gap-2">
                     <Activity className="w-4 h-4 text-emerald-600" />
-                    <span>4. แนวโน้ม ประสิทธิภาพ WWT (%)</span>
+                    <span>5. แนวโน้ม ประสิทธิภาพ WWT (%)</span>
                   </span>
                 </h4>
                 <div className="h-[200px] w-full pt-1">
@@ -1578,13 +1689,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             )}
 
-            {/* Chart 5: Biogas Efficiency Trend */}
+            {/* Chart 6: Biogas Efficiency Trend */}
             {selectedCharts.biogasEff && (
               <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-3 hover:shadow-md transition-all w-full">
                 <h4 className="font-extrabold text-sm text-slate-900 flex items-center justify-between border-b border-slate-100 pb-2">
                   <span className="flex items-center gap-2">
                     <Flame className="w-4 h-4 text-emerald-600" />
-                    <span>5. แนวโน้ม ประสิทธิภาพ Biogas (%)</span>
+                    <span>6. แนวโน้ม ประสิทธิภาพ Biogas (%)</span>
                   </span>
                 </h4>
                 <div className="h-[200px] w-full pt-1">
@@ -1864,6 +1975,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <Square className="w-4 h-4 text-slate-300 shrink-0" />
                     )}
                   </div>
+
+                  {/* KPI 10: KPI Cost Saving */}
+                  <div
+                    onClick={() => toggleKpi('costSaving')}
+                    className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${selectedKpis.costSaving
+                      ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 shadow-2xs'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <PiggyBank className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="text-xs font-extrabold">10. KPI Cost Saving (ต้นทุนประหยัดตะกอน)</span>
+                    </div>
+                    {selectedKpis.costSaving ? (
+                      <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <Square className="w-4 h-4 text-slate-300 shrink-0" />
+                    )}
+                  </div>
                 </>
               )}
 
@@ -1931,7 +2061,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {settingsTab === 'chart' && (
                 <>
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-xs font-bold text-slate-500">
-                    <span>รายการกราฟที่มีในระบบ ({visibleChartCount}/5)</span>
+                    <span>รายการกราฟที่มีในระบบ ({visibleChartCount}/6)</span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setAllCharts(true)}
@@ -2006,19 +2136,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     )}
                   </div>
 
-                  {/* Chart 4 */}
+                  {/* Chart 4: Cost Saving */}
                   <div
-                    onClick={() => toggleChart('wwtEff')}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${selectedCharts.wwtEff
+                    onClick={() => toggleChart('costSaving')}
+                    className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${selectedCharts.costSaving
                       ? 'bg-emerald-50/60 border-emerald-300 text-emerald-900 shadow-2xs'
                       : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Activity className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span className="text-xs font-extrabold">4. แนวโน้ม ประสิทธิภาพ WWT (%)</span>
+                      <PiggyBank className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="text-xs font-extrabold">4. แนวโน้ม ต้นทุนประหยัดตะกอน (฿)</span>
                     </div>
-                    {selectedCharts.wwtEff ? (
+                    {selectedCharts.costSaving ? (
                       <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
                     ) : (
                       <Square className="w-4 h-4 text-slate-300 shrink-0" />
@@ -2026,6 +2156,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
 
                   {/* Chart 5 */}
+                  <div
+                    onClick={() => toggleChart('wwtEff')}
+                    className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${selectedCharts.wwtEff
+                      ? 'bg-teal-50/60 border-teal-300 text-teal-900 shadow-2xs'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Activity className="w-4 h-4 text-teal-600 shrink-0" />
+                      <span className="text-xs font-extrabold">5. แนวโน้ม ประสิทธิภาพ WWT (%)</span>
+                    </div>
+                    {selectedCharts.wwtEff ? (
+                      <CheckSquare className="w-4 h-4 text-teal-600 shrink-0" />
+                    ) : (
+                      <Square className="w-4 h-4 text-slate-300 shrink-0" />
+                    )}
+                  </div>
+
+                  {/* Chart 6 */}
                   <div
                     onClick={() => toggleChart('biogasEff')}
                     className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${selectedCharts.biogasEff
@@ -2035,7 +2184,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   >
                     <div className="flex items-center gap-3">
                       <Flame className="w-4 h-4 text-cyan-600 shrink-0" />
-                      <span className="text-xs font-extrabold">5. แนวโน้ม ประสิทธิภาพ Biogas (%)</span>
+                      <span className="text-xs font-extrabold">6. แนวโน้ม ประสิทธิภาพ Biogas (%)</span>
                     </div>
                     {selectedCharts.biogasEff ? (
                       <CheckSquare className="w-4 h-4 text-cyan-600 shrink-0" />

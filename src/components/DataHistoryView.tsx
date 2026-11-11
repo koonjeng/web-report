@@ -25,6 +25,8 @@ import {
   Save,
   BadgeCheck,
   FlaskConical,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import { FullMonthlyReportData, CategorySubmission, ReportData, UserRole } from '@/lib/types';
 import { calculateMetrics, MONTH_NAMES_TH } from '@/lib/calculations';
@@ -343,17 +345,26 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
   // View, Edit, Delete Modal States
   const [viewModalItem, setViewModalItem] = useState<any | null>(null);
   const [editModalItem, setEditModalItem] = useState<any | null>(null);
+  const [deletingItem, setDeletingItem] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-  const handleDeleteItem = async (item: any) => {
-    if (!window.confirm(`คุณต้องการลบข้อมูลรายการนี้ (วันที่ ${item.report_date || item.month}) ใช่หรือไม่?`)) {
-      return;
+  const handleDeleteConfirm = async () => {
+    if (!deletingItem) return;
+    setIsDeleting(true);
+    try {
+      if (deletingItem.id.startsWith('sub-')) {
+        await deleteCategorySubmission(deletingItem.id);
+      } else {
+        await deleteMonthlyReport(deletingItem.id);
+      }
+      setDeletingItem(null);
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการลบรายการ');
+    } finally {
+      setIsDeleting(false);
     }
-    if (item.id.startsWith('sub-')) {
-      await deleteCategorySubmission(item.id);
-    } else {
-      await deleteMonthlyReport(item.id);
-    }
-    window.location.reload();
   };
 
   const handleSaveEditWithData = async (updatedData: Partial<ReportData>) => {
@@ -1023,7 +1034,7 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
                           </button>
 
                           <button
-                            onClick={() => handleDeleteItem(item)}
+                            onClick={() => setDeletingItem(item)}
                             title="ลบข้อมูล"
                             className="p-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer"
                           >
@@ -1167,6 +1178,54 @@ export const DataHistoryView: React.FC<DataHistoryViewProps> = ({
                 onCloseModal={() => setEditModalItem(null)}
                 onSaveEditItem={handleSaveEditWithData}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deletingItem && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-sm bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden p-6 space-y-4 text-center animate-scaleUp">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">
+                ยืนยันการลบรายการนี้?
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
+                ข้อมูลรายการของวันที่ <strong className="text-slate-800">{deletingItem.report_date ? deletingItem.report_date.split('-').reverse().join('/') : `เดือน ${MONTH_NAMES_TH[(deletingItem.month || 1) - 1]}`}</strong> จะถูกลบออกจากฐานข้อมูลถาวร
+              </p>
+            </div>
+
+            <div className="pt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>กำลังลบ...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>ยืนยันลบรายการ</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeletingItem(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                ยกเลิก
+              </button>
             </div>
           </div>
         </div>

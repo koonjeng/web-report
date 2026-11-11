@@ -15,6 +15,8 @@ import {
   Zap,
   Leaf,
   Flame,
+  Eye,
+  ImageIcon,
 } from 'lucide-react';
 import { FullMonthlyReportData, UserRole, CategorySubmission, PondSubmission } from '@/lib/types';
 import { calculateMetrics, MONTH_NAMES_TH } from '@/lib/calculations';
@@ -49,62 +51,68 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
 }) => {
   const [categorySubmissions, setCategorySubmissions] = useState<CategorySubmission[]>([]);
   const [pondSubmissions, setPondSubmissions] = useState<PondSubmission[]>([]);
+  const [maintRecords, setMaintRecords] = useState<MaintenanceHistoryRecord[]>([]);
+
+  // Multi-selection states
+  const [selectedPondIds, setSelectedPondIds] = useState<string[]>([]);
+  const [selectedMaintIds, setSelectedMaintIds] = useState<string[]>([]);
+  const [selectedCatIds, setSelectedCatIds] = useState<string[]>([]);
+  const [isBatchProcessing, setIsBatchProcessing] = useState<boolean>(false);
 
   const loadAllPondSubs = async () => {
     const data = await fetchPondSubmissions();
     setPondSubmissions(data);
   };
 
-  useEffect(() => {
-    loadAllPondSubs();
-  }, []);
+  const loadAllSubs = async () => {
+    const gregorianYear = selectedYear > 2500 ? selectedYear - 543 : selectedYear;
+    const buddhistYear = selectedYear > 2500 ? selectedYear : selectedYear + 543;
+    
+    const subsCurrent = await getCategorySubmissions(selectedYear);
+    const subsGregorian = await getCategorySubmissions(gregorianYear);
+    const subsBuddhist = await getCategorySubmissions(buddhistYear);
 
-  useEffect(() => {
-    async function loadSubs() {
-      const gregorianYear = selectedYear > 2500 ? selectedYear - 543 : selectedYear;
-      const buddhistYear = selectedYear > 2500 ? selectedYear : selectedYear + 543;
-      
-      const subsCurrent = await getCategorySubmissions(selectedYear);
-      const subsGregorian = await getCategorySubmissions(gregorianYear);
-      const subsBuddhist = await getCategorySubmissions(buddhistYear);
+    // Merge unique by id
+    const map = new Map<string, CategorySubmission>();
+    [...subsCurrent, ...subsGregorian, ...subsBuddhist].forEach((s) => map.set(s.id, s));
+    setCategorySubmissions(Array.from(map.values()));
+  };
 
-      // Merge unique by id
-      const map = new Map<string, CategorySubmission>();
-      [...subsCurrent, ...subsGregorian, ...subsBuddhist].forEach((s) => map.set(s.id, s));
-      setCategorySubmissions(Array.from(map.values()));
-    }
-    loadSubs();
-  }, [selectedYear]);
-
-  const [maintRecords, setMaintRecords] = useState<MaintenanceHistoryRecord[]>([]);
-
-  useEffect(() => {
-    async function loadPMHistory() {
-      if (isSupabaseConfigured && supabase) {
-        const { data } = await supabase.from('maintenance_history').select('*').order('created_at', { ascending: false });
-        if (data) {
-          setMaintRecords(
-            data.map((h: any) => ({
-              id: h.id,
-              taskId: h.task_id,
-              equipment: h.equipment,
-              taskName: h.task_name,
-              doneDate: h.done_date,
-              reporterName: h.reporter_name,
-              status: h.status,
-              submittedAt: h.submitted_at || h.created_at,
-            }))
-          );
-          return;
-        }
+  const loadPMHistory = async () => {
+    if (isSupabaseConfigured && supabase) {
+      const { data } = await supabase.from('maintenance_history').select('*').order('created_at', { ascending: false });
+      if (data) {
+        setMaintRecords(
+          data.map((h: any) => ({
+            id: h.id,
+            taskId: h.task_id,
+            equipment: h.equipment,
+            taskName: h.task_name,
+            doneDate: h.done_date,
+            reporterName: h.reporter_name,
+            status: h.status,
+            submittedAt: h.submitted_at || h.created_at,
+          }))
+        );
+        return;
       }
-      try {
-        const saved = localStorage.getItem('tdc_maintenance_history');
-        if (saved) setMaintRecords(JSON.parse(saved));
-      } catch {}
     }
-    loadPMHistory();
-  }, []);
+    try {
+      const saved = localStorage.getItem('tdc_maintenance_history');
+      if (saved) setMaintRecords(JSON.parse(saved));
+    } catch {}
+  };
+
+  const refreshAllData = async () => {
+    await Promise.all([loadAllPondSubs(), loadAllSubs(), loadPMHistory()]);
+  };
+
+  // Real-time polling every 6 seconds to catch new incoming pond entries
+  useEffect(() => {
+    refreshAllData();
+    const interval = setInterval(refreshAllData, 6000);
+    return () => clearInterval(interval);
+  }, [selectedYear]);
 
   const pendingMaintRecords = useMemo(() => {
     return maintRecords.filter((m) => m.status === 'pending');
@@ -119,6 +127,94 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
   }, [pondSubmissions]);
 
   const totalPendingCount = pendingSubmissions.length + pendingMaintRecords.length + pendingPondSubmissions.length;
+  const totalSelectedCount = selectedPondIds.length + selectedMaintIds.length + selectedCatIds.length;
+
+  // Toggle Selection Helpers
+  const toggleSelectAll = () => {
+    if (totalSelectedCount === totalPendingCount && totalPendingCount > 0) {
+      setSelectedPondIds([]);
+      setSelectedMaintIds([]);
+      setSelectedCatIds([]);
+    } else {
+      setSelectedPondIds(pendingPondSubmissions.map((p) => p.id));
+      setSelectedMaintIds(pendingMaintRecords.map((m) => m.id));
+      setSelectedCatIds(pendingSubmissions.map((s) => s.id));
+    }
+  };
+
+  const toggleSelectPond = (id: string) => {
+    setSelectedPondIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  };
+
+  const toggleSelectMaint = (id: string) => {
+    setSelectedMaintIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  };
+
+  const toggleSelectCat = (id: string) => {
+    setSelectedCatIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  };
+
+  // Batch Approve All Selected
+  const handleBatchApprove = async () => {
+    if (totalSelectedCount === 0) return;
+    setIsBatchProcessing(true);
+    let approverName = currentUser?.email || 'Approver';
+    if (currentUser?.email) {
+      try {
+        const savedName = localStorage.getItem(`tdc_user_display_name_${currentUser.email}`);
+        if (savedName) approverName = savedName;
+      } catch {}
+    }
+
+    try {
+      // 1. Approve selected Pond Submissions
+      for (const pondId of selectedPondIds) {
+        await updatePondSubmission(pondId, {
+          status: 'approved',
+          approver_name: approverName,
+        });
+      }
+
+      // 2. Approve selected Maintenance records
+      for (const maintId of selectedMaintIds) {
+        const record = maintRecords.find((m) => m.id === maintId);
+        if (record) {
+          if (isSupabaseConfigured && supabase) {
+            await supabase.from('maintenance_history').update({ status: 'approved' }).eq('id', record.id);
+            await supabase.from('maintenance_tasks').update({
+              last_done_date: record.doneDate,
+              reporter_name: record.reporterName,
+              status: 'approved',
+            }).eq('id', record.taskId);
+          }
+        }
+      }
+
+      // 3. Approve selected Category Submissions
+      for (const catId of selectedCatIds) {
+        const sub = categorySubmissions.find((s) => s.id === catId);
+        if (sub) {
+          await updateCategorySubmissionStatus(selectedYear, catId, 'approved', undefined, approverName);
+          onApproveReport(sub.month);
+        }
+      }
+
+      triggerNotify(`อนุมัติสำเร็จ ${totalSelectedCount} รายการเรียบร้อยแล้ว!`);
+      setSelectedPondIds([]);
+      setSelectedMaintIds([]);
+      setSelectedCatIds([]);
+      
+      // Auto refresh page
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
+    } catch (err) {
+      console.error(err);
+      triggerNotify('เกิดข้อผิดพลาดในการอนุมัติชุดข้อมูล');
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
 
   const handleApproveMaintRecord = async (record: MaintenanceHistoryRecord) => {
     // 1. Update status in history
@@ -138,7 +234,7 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
     }
 
     triggerNotify(`อนุมัติการซ่อมบำรุง "${record.equipment}" เรียบร้อยแล้ว`);
-    setTimeout(() => window.location.reload(), 1200);
+    setTimeout(() => window.location.reload(), 800);
   };
 
   const handleApprovePondSubmission = async (pItem: PondSubmission) => {
@@ -149,7 +245,7 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
     });
     if (success) {
       triggerNotify(`อนุมัติข้อมูลบ่อบำบัด "${pItem.pond_name}" เรียบร้อยแล้ว!`);
-      loadAllPondSubs();
+      setTimeout(() => window.location.reload(), 800);
     }
   };
 
@@ -159,7 +255,7 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
     });
     if (success) {
       triggerNotify(`ตีกลับ/ปฏิเสธรายการ "${pItem.pond_name}" เรียบร้อยแล้ว`);
-      loadAllPondSubs();
+      setTimeout(() => window.location.reload(), 800);
     }
   };
 
@@ -172,12 +268,15 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
       await supabase.from('maintenance_history').delete().eq('id', recordId);
     }
     triggerNotify('ลบ/ตีกลับรายการซ่อมบำรุงเรียบร้อยแล้ว');
+    setTimeout(() => window.location.reload(), 800);
   };
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [targetSubmissionId, setTargetSubmissionId] = useState<string | null>(null);
   const [rejectReasonInput, setRejectReasonInput] = useState('');
   const [viewModalSub, setViewModalSub] = useState<CategorySubmission | null>(null);
+  const [viewModalPondSub, setViewModalPondSub] = useState<PondSubmission | null>(null);
+  const [selectedFullPhoto, setSelectedFullPhoto] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
   const triggerNotify = (msg: string) => {
@@ -203,6 +302,7 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
     setRejectModalOpen(false);
     setTargetSubmissionId(null);
     triggerNotify('ตีกลับหมวดนี้เรียบร้อยแล้ว');
+    setTimeout(() => window.location.reload(), 800);
   };
 
   const handleApproveSubmission = async (id: string, month: number) => {
@@ -219,7 +319,7 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
     setCategorySubmissions(updated);
     onApproveReport(month);
     triggerNotify('อนุมัติหมวดนี้เรียบร้อยแล้ว');
-    setTimeout(() => window.location.reload(), 1200);
+    setTimeout(() => window.location.reload(), 800);
   };
 
   return (
@@ -232,7 +332,7 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
         </div>
       )}
 
-      {/* HEADER CARD */}
+      {/* HEADER CARD & BATCH ACTIONS */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-sky-600/20">
@@ -246,10 +346,38 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              รายการคำขออนุมัติแยกตามหมวดหมู่ประจำวัน เพื่อรอการตรวจสอบและอนุมัติ
+              รายการคำขออนุมัติแยกตามหมวดหมู่ประจำวัน ติ๊กเลือกเพื่ออนุมัติพร้อมกันหลายรายการได้
             </p>
           </div>
         </div>
+
+        {totalPendingCount > 0 && (
+          <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
+            <label className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl cursor-pointer transition-all">
+              <input
+                type="checkbox"
+                checked={totalSelectedCount === totalPendingCount && totalPendingCount > 0}
+                onChange={toggleSelectAll}
+                className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+              />
+              <span>เลือกทั้งหมด ({totalPendingCount})</span>
+            </label>
+
+            {totalSelectedCount > 0 && (
+              <button
+                type="button"
+                disabled={isBatchProcessing}
+                onClick={handleBatchApprove}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
+              >
+                <BadgeCheck className="w-4 h-4 text-emerald-200" />
+                <span>
+                  {isBatchProcessing ? 'กำลังอนุมัติ...' : `อนุมัติที่เลือก (${totalSelectedCount} รายการ)`}
+                </span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* PENDING SUBMISSIONS LIST */}
@@ -268,14 +396,23 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
           {/* POND ENTRY PENDING ITEMS */}
           {pendingPondSubmissions.map((pItem) => {
             const displayD = pItem.report_date ? pItem.report_date.split('-').reverse().join('/') : '-';
+            const isChecked = selectedPondIds.includes(pItem.id);
 
             return (
               <div
                 key={pItem.id}
-                className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all border-l-4 border-l-sky-500"
+                className={`bg-white rounded-2xl border shadow-sm overflow-hidden hover:shadow-md transition-all border-l-4 ${
+                  isChecked ? 'border-sky-500 ring-2 ring-sky-400/30' : 'border-slate-200 border-l-sky-500'
+                }`}
               >
                 <div className="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleSelectPond(pItem.id)}
+                      className="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 cursor-pointer bg-slate-800 border-slate-600"
+                    />
                     <div className="w-9 h-9 rounded-xl bg-sky-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs">
                       POND
                     </div>
@@ -294,6 +431,14 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
                   </div>
 
                   <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => setViewModalPondSub(pItem)}
+                      className="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-black rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span>ดูข้อมูล & รูปถ่าย</span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleApprovePondSubmission(pItem)}
@@ -336,14 +481,23 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
           {pendingMaintRecords.map((mRecord) => {
             const parts = mRecord.doneDate ? mRecord.doneDate.split('-') : [];
             const displayD = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : mRecord.doneDate;
+            const isChecked = selectedMaintIds.includes(mRecord.id);
 
             return (
               <div
                 key={mRecord.id}
-                className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all border-l-4 border-l-cyan-500"
+                className={`bg-white rounded-2xl border shadow-sm overflow-hidden hover:shadow-md transition-all border-l-4 ${
+                  isChecked ? 'border-cyan-500 ring-2 ring-cyan-400/30' : 'border-slate-200 border-l-cyan-500'
+                }`}
               >
                 <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleSelectMaint(mRecord.id)}
+                      className="w-5 h-5 rounded text-cyan-500 focus:ring-cyan-500 cursor-pointer bg-slate-800 border-slate-600"
+                    />
                     <div className="w-9 h-9 rounded-xl bg-cyan-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs">
                       PM
                     </div>
@@ -398,15 +552,24 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
           {pendingSubmissions.map((sub) => {
             const dateFormatted = sub.report_date ? sub.report_date.split('-').reverse().join('/') : '-';
             const metrics = calculateMetrics(sub.data);
+            const isChecked = selectedCatIds.includes(sub.id);
 
             return (
               <div
                 key={sub.id}
-                className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all"
+                className={`bg-white rounded-2xl border shadow-sm overflow-hidden hover:shadow-md transition-all border-l-4 ${
+                  isChecked ? 'border-sky-500 ring-2 ring-sky-400/30' : 'border-slate-200 border-l-sky-500'
+                }`}
               >
                 {/* CARD TOP BAR */}
                 <div className="bg-gradient-to-r from-slate-900 to-sky-950 text-white px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleSelectCat(sub.id)}
+                      className="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 cursor-pointer bg-slate-800 border-slate-600"
+                    />
                     <div className="w-9 h-9 rounded-xl bg-sky-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs uppercase">
                       {sub.category_key}
                     </div>
@@ -705,6 +868,127 @@ export const PendingApprovalsView: React.FC<PendingApprovalsViewProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* VIEW POND SUBMISSION DETAILS MODAL */}
+      {viewModalPondSub && (
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-5 border border-slate-200 relative animate-scaleUp">
+            {/* Close Button */}
+            <button
+              onClick={() => setViewModalPondSub(null)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition-all cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div>
+              <span className="text-xs font-black px-3 py-1 rounded-xl bg-sky-600 text-white uppercase tracking-wider">
+                {viewModalPondSub.pond_name}
+              </span>
+              <h3 className="text-lg font-black text-slate-900 mt-2 tracking-tight">
+                รายละเอียดการบันทึกข้อมูลผลตรวจวัด (รออนุมัติ)
+              </h3>
+              <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                วันที่ตรวจวัด: {viewModalPondSub.report_date.split('-').reverse().join('/')} เวลา {viewModalPondSub.report_time || '00:00'} น.
+              </p>
+              <p className="text-xs text-slate-700 font-extrabold mt-1">
+                ผู้ลงข้อมูล: {viewModalPondSub.reporter_name || 'พนักงานทั่วไป (ไม่มียศ)'}
+              </p>
+            </div>
+
+            {/* Metrics Grid */}
+            <div className="space-y-2 border-t border-slate-100 pt-3">
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wider block">
+                พารามิเตอร์และตัววัดทางเคมี/กายภาพ:
+              </span>
+              <div className="grid grid-cols-2 gap-2.5">
+                {Object.entries(viewModalPondSub.metrics || {}).map(([k, v], idx) => (
+                  <div key={idx} className="bg-slate-50 p-3 rounded-2xl border border-slate-200/90 text-center">
+                    <span className="text-[11px] font-bold text-slate-500 block uppercase">{k.replace('_', ' ')}</span>
+                    <div className="text-lg font-black text-slate-900 mt-0.5 tracking-tight">{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Photo Gallery with Zoom Preview */}
+            {((viewModalPondSub.image_urls && viewModalPondSub.image_urls.length > 0) || viewModalPondSub.image_url) && (() => {
+              const photos = (viewModalPondSub.image_urls && viewModalPondSub.image_urls.length > 0)
+                ? viewModalPondSub.image_urls
+                : [viewModalPondSub.image_url!];
+
+              return (
+                <div className="space-y-2 border-t border-slate-100 pt-3">
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center justify-between">
+                    <span>รูปถ่ายหน้างาน ({photos.length} รูป - คลิกเพื่อดูขยาย):</span>
+                  </span>
+                  <div className="grid grid-cols-2 gap-2.5 max-h-60 overflow-y-auto p-2 rounded-2xl bg-slate-900 border border-slate-800">
+                    {photos.map((url, pIdx) => (
+                      <div
+                        key={pIdx}
+                        onClick={() => setSelectedFullPhoto(url)}
+                        className="relative rounded-xl overflow-hidden border border-slate-700 group cursor-pointer hover:border-sky-400 transition-all"
+                      >
+                        <img src={url} alt={`Photo ${pIdx + 1}`} className="w-full h-32 object-cover block group-hover:scale-105 transition-all" />
+                        <span className="absolute bottom-1 right-1 bg-slate-950/80 text-white text-[9px] font-black px-2 py-0.5 rounded-md">
+                          #{pIdx + 1} 🔍
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Remarks */}
+            {viewModalPondSub.remarks && (
+              <div className="bg-sky-50 p-3.5 rounded-2xl border border-sky-200 text-xs text-sky-950 font-medium">
+                <strong>หมายเหตุเพิ่มเติม:</strong> {viewModalPondSub.remarks}
+              </div>
+            )}
+
+            {/* Action Buttons inside modal */}
+            <div className="pt-2 flex items-center gap-2">
+              <button
+                onClick={() => {
+                  handleApprovePondSubmission(viewModalPondSub);
+                  setViewModalPondSub(null);
+                }}
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <BadgeCheck className="w-4 h-4 text-slate-950" />
+                <span>อนุมัติรายการนี้</span>
+              </button>
+              <button
+                onClick={() => setViewModalPondSub(null)}
+                className="py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-md transition-all cursor-pointer"
+              >
+                ปิดหน้าต่าง
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FULL SCREEN PHOTO ZOOM MODAL */}
+      {selectedFullPhoto && (
+        <div
+          onClick={() => setSelectedFullPhoto(null)}
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fadeIn cursor-pointer"
+        >
+          <div className="relative max-w-4xl max-h-[85vh] overflow-hidden rounded-2xl border border-slate-700 shadow-2xl">
+            <img src={selectedFullPhoto} alt="Full Size Photo" className="w-full h-full object-contain max-h-[80vh] block" />
+            <button
+              onClick={() => setSelectedFullPhoto(null)}
+              className="absolute top-3 right-3 bg-slate-900/80 hover:bg-slate-900 text-white w-9 h-9 rounded-full font-black text-sm flex items-center justify-center border border-slate-700 shadow-lg cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-xs font-bold text-slate-300 mt-3">คลิกที่ใดก็ได้เพื่อปิดรูปภาพภาพใหญ่</p>
         </div>
       )}
     </div>

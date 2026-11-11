@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   FileSpreadsheet,
-  BookOpen,
   Zap,
   LogOut,
   ShieldCheck,
@@ -23,12 +22,11 @@ import {
   History,
   ChevronDown,
   ChevronRight,
-  ChevronLeft,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
 import { UserRole, FullMonthlyReportData } from '@/lib/types';
-import { getCategorySubmissions } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase, fetchPondSubmissions } from '@/lib/supabase';
 
 interface SidebarProps {
   activeTab: string;
@@ -61,13 +59,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [extraPendingCount, setExtraPendingCount] = useState<number>(0);
+
+  // Fetch real-time pending pond submissions & PM records
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPendingCounts = async () => {
+      try {
+        const pondSubs = await fetchPondSubmissions();
+        const pendingPondCount = pondSubs.filter((p) => p.status === 'pending').length;
+        
+        let pendingPMCount = 0;
+        if (isSupabaseConfigured && supabase) {
+          const { data } = await supabase.from('maintenance_history').select('status').eq('status', 'pending');
+          pendingPMCount = data ? data.length : 0;
+        } else {
+          const saved = localStorage.getItem('tdc_maintenance_history');
+          if (saved) {
+            const list = JSON.parse(saved);
+            pendingPMCount = list.filter((m: any) => m.status === 'pending').length;
+          }
+        }
+
+        if (isMounted) {
+          setExtraPendingCount(pendingPondCount + pendingPMCount);
+        }
+      } catch {}
+    };
+
+    fetchPendingCounts();
+    const interval = setInterval(fetchPendingCounts, 10000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const monthlyPendingCount = reportsData.filter((r) => r.report.status === 'pending').length;
-  const pendingCount = monthlyPendingCount;
+  const pendingCount = monthlyPendingCount + extraPendingCount;
 
   const hasRole = Boolean(currentUser && (currentUser.role === 'admin' || currentUser.role === 'approver'));
 
-  // State to track collapsed categories (key: category title -> boolean)
+  // State to track collapsed categories
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
 
   const toggleCategory = (title: string) => {
@@ -77,22 +110,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }));
   };
 
-  // Menu categories organized EXACTLY as requested by user
+  // Menu categories organized with clean English labels
   const menuCategories: MenuCategory[] = [
     {
-      title: 'ภาพรวมระบบ & การวิเคราะห์',
+      title: 'Overview & Analytics',
       items: [
-        { id: 'overview', label: 'Overview ผังผิวน้ำ', icon: Map, badge: null },
-        ...(hasRole ? [{ id: 'dashboard', label: 'Dashboard สถิติ', icon: LayoutDashboard, badge: null }] : []),
-        ...(hasRole ? [{ id: 'energy-report', label: 'A4 Energy Report', icon: FileText, badge: null }] : []),
+        { id: 'overview', label: 'Overview', icon: Map, badge: null },
+        ...(hasRole ? [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null }] : []),
       ],
     },
     {
-      title: 'บันทึกข้อมูล & การทำงาน',
+      title: 'Data Entry & Operations',
       items: [
-        { id: 'data-entry', label: 'Daily Report ลงข้อมูลรายวัน', icon: FileSpreadsheet, badge: null },
-        { id: 'pond-entry', label: 'Pond Entry ลงข้อมูลบ่อบำบัด', icon: Droplets, badge: null },
-        { id: 'maintenance', label: 'PM งานซ่อมบำรุง', icon: Wrench, badge: null },
+        { id: 'data-entry', label: 'Daily Report', icon: FileSpreadsheet, badge: null },
+        { id: 'pond-entry', label: 'Pond Entry', icon: Droplets, badge: null },
+        { id: 'maintenance', label: 'Preventive Maintenance', icon: Wrench, badge: null },
       ],
     },
   ];
@@ -101,33 +133,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
   if (hasRole) {
     adminItems.push({
       id: 'pending',
-      label: 'Pending รายการรออนุมัติ',
+      label: 'Pending Approvals',
       icon: Clock,
       badge: pendingCount > 0 ? pendingCount : null,
     });
-    adminItems.push({ id: 'history', label: 'History ประวัติบันทึกระบบ', icon: Database, badge: null });
+    adminItems.push({
+      id: 'energy-report',
+      label: 'A4 Energy Report',
+      icon: FileText,
+      badge: null,
+    });
+    adminItems.push({ id: 'history', label: 'System History', icon: Database, badge: null });
+    adminItems.push({ id: 'pond-history', label: 'Pond History', icon: History, badge: null });
+    adminItems.push({ id: 'troubleshooting', label: 'Troubleshoot Guide', icon: ShieldAlert, badge: null });
+    if (currentUser?.role === 'admin') {
+      adminItems.push({ id: 'users', label: 'User Management', icon: Users, badge: null });
+    }
   }
 
-  // Everyone or Role based items in Group 3
-  adminItems.push({ id: 'pond-history', label: 'Pond History ประวัติลงข้อมูลบ่อบำบัด', icon: History, badge: null });
-
-  if (hasRole) {
-    adminItems.push({ id: 'troubleshooting', label: 'Troubleshoot คู่มือแก้ปัญหา', icon: ShieldAlert, badge: null });
+  if (hasRole && adminItems.length > 0) {
+    menuCategories.push({
+      title: 'Approvals & Admin',
+      items: adminItems,
+    });
   }
-
-  if (currentUser?.role === 'admin') {
-    adminItems.push({ id: 'users', label: 'จัดการผู้ใช้งาน (Users)', icon: Users, badge: null });
-  }
-
-  menuCategories.push({
-    title: 'การอนุมัติ & จัดการระบบ',
-    items: adminItems,
-  });
 
   if (currentUser) {
     menuCategories.push({
-      title: 'ผู้ใช้งาน',
-      items: [{ id: 'settings', label: 'ตั้งค่าบัญชี', icon: Settings, badge: null }],
+      title: 'Account',
+      items: [{ id: 'settings', label: 'Account Settings', icon: Settings, badge: null }],
     });
   }
 
@@ -139,25 +173,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navContent = (
     <div className="flex flex-col h-full justify-between">
       {/* Top Header & Menu */}
-      <div className="flex flex-col min-h-0 overflow-y-auto">
+      <div className="flex flex-col min-h-0 overflow-y-auto no-scrollbar">
         {/* Brand Header */}
-        <div className="p-4 flex items-center justify-between border-b border-slate-700/60 shrink-0">
+        <div className={`p-3.5 flex ${isSidebarCollapsed ? 'flex-col items-center gap-2.5' : 'items-center justify-between'} border-b border-[#2b4b73]/70 shrink-0`}>
           {!isSidebarCollapsed ? (
-            <div className="overflow-hidden">
-              <h1 className="font-black text-base leading-tight tracking-wide text-slate-100 truncate">
-                TDC Utility
-              </h1>
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center shrink-0 shadow-md shadow-sky-500/20 text-white">
+                <Zap className="w-5 h-5 text-white fill-white/20" />
+              </div>
+              <div className="overflow-hidden">
+                <h1 className="font-black text-lg leading-tight tracking-wide text-white truncate">
+                  Utility System
+                </h1>
+                <p className="text-[10px] text-sky-300 font-bold uppercase tracking-wider">Energy & Plant</p>
+              </div>
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center font-black text-slate-950 mx-auto">
-              T
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center shrink-0 shadow-md shadow-sky-500/20 text-white" title="Utility System">
+              <Zap className="w-5 h-5 text-white fill-white/20" />
             </div>
           )}
 
           {/* Desktop Toggle Sidebar Button */}
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="hidden md:flex text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-all cursor-pointer"
+            className="hidden md:flex text-sky-200/70 hover:text-white p-1.5 rounded-xl hover:bg-[#27466d] transition-all cursor-pointer items-center justify-center shrink-0"
             title={isSidebarCollapsed ? 'ขยายแถบเมนู (Expand Sidebar)' : 'พับแถบเมนูไปทางซ้าย (Collapse Sidebar)'}
           >
             {isSidebarCollapsed ? <PanelLeftOpen className="w-5 h-5 text-sky-400" /> : <PanelLeftClose className="w-5 h-5" />}
@@ -166,62 +206,80 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Close button on mobile */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="md:hidden text-slate-400 hover:text-white p-1 rounded-lg"
+            className="md:hidden text-sky-200 hover:text-white p-1 rounded-lg"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Navigation Menu Grouped by Category */}
-        <nav className="p-3 space-y-4 flex-1">
+        <nav className="py-3 pl-3 pr-0 space-y-4 flex-1">
           {menuCategories.map((cat, catIdx) => {
             const isCollapsed = Boolean(collapsedCategories[cat.title]);
 
             return (
               <div key={catIdx} className="space-y-1">
-                {/* Category Header with Collapse Toggle (Hidden when sidebar is mini collapsed) */}
+                {/* Category Header with Collapse Toggle */}
                 {!isSidebarCollapsed && (
                   <button
                     type="button"
                     onClick={() => toggleCategory(cat.title)}
-                    className="w-full flex items-center justify-between px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-sky-400/90 hover:text-sky-300 transition-colors cursor-pointer group"
+                    className="w-full flex items-center justify-between pl-2.5 pr-4 py-1 text-[10px] font-black uppercase tracking-wider text-sky-300/90 hover:text-sky-100 transition-colors cursor-pointer group"
                   >
                     <span className="truncate">{cat.title}</span>
-                    <div className="text-sky-400/60 group-hover:text-sky-300">
+                    <div className="text-sky-300/60 group-hover:text-sky-100">
                       {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     </div>
                   </button>
                 )}
 
-                {/* Collapsible Menu Items */}
+                {/* Collapsible Menu Items with Seamless Inverted Notch Curve */}
                 {(!isCollapsed || isSidebarCollapsed) && (
-                  <div className="space-y-1 pt-0.5 animate-fadeIn">
+                  <div className="space-y-1.5 pt-0.5 animate-fadeIn">
                     {cat.items.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
                       return (
-                        <button
-                          key={item.id}
-                          onClick={() => handleNavClick(item.id)}
-                          title={isSidebarCollapsed ? item.label : undefined}
-                          className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer ${isActive
-                            ? 'bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/20'
-                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-semibold'
-                            }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? 'text-slate-950' : 'text-sky-400'}`} />
-                            {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
-                          </div>
-                          {!isSidebarCollapsed && item.badge !== null && (
-                            <span
-                              className={`px-2 py-0.5 text-[10px] font-black rounded-full ${isActive ? 'bg-slate-950 text-sky-400' : 'bg-amber-500 text-slate-950 animate-pulse'
-                                }`}
-                            >
-                              {item.badge}
-                            </span>
+                        <div key={item.id} className="relative">
+                          <button
+                            onClick={() => handleNavClick(item.id)}
+                            title={isSidebarCollapsed ? item.label : undefined}
+                            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center py-2.5 px-2' : 'justify-between pl-3.5 pr-4 py-2.5'} rounded-l-2xl text-xs font-bold transition-all duration-150 cursor-pointer relative z-10 ${isActive
+                              ? 'bg-white text-slate-900 font-extrabold shadow-none'
+                              : 'text-sky-100/80 hover:bg-[#27466d]/70 hover:text-white font-semibold rounded-r-xl mr-2'
+                              }`}
+                            style={isActive ? { width: 'calc(100% + 2px)' } : undefined}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? 'text-amber-500' : 'text-sky-300'}`} />
+                              {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
+                            </div>
+                            {!isSidebarCollapsed && item.badge !== null && (
+                              <span
+                                className={`px-2 py-0.5 text-[10px] font-black rounded-full ${isActive ? 'bg-amber-500 text-slate-950' : 'bg-amber-500 text-slate-950 animate-pulse'
+                                  }`}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
+                          </button>
+
+                          {/* Outer Inverted Curved Corners (Flawless Notch Match in Pure White) */}
+                          {isActive && (
+                            <>
+                              {/* Top Curved Notch */}
+                              <div className="absolute -top-4 w-4 h-4 overflow-hidden pointer-events-none z-10" style={{ right: '-2px' }}>
+                                <div className="w-full h-full bg-[#1b365d] rounded-br-2xl" />
+                                <div className="absolute inset-0 bg-white -z-10" />
+                              </div>
+                              {/* Bottom Curved Notch */}
+                              <div className="absolute -bottom-4 w-4 h-4 overflow-hidden pointer-events-none z-10" style={{ right: '-2px' }}>
+                                <div className="w-full h-full bg-[#1b365d] rounded-tr-2xl" />
+                                <div className="absolute inset-0 bg-white -z-10" />
+                              </div>
+                            </>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -233,17 +291,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* User Info / Role Footer */}
-      <div className="p-3 border-t border-slate-700/60 bg-slate-900/80 shrink-0 mt-auto">
+      <div className="p-3 border-t border-[#2b4b73]/70 bg-[#132742] shrink-0 mt-auto">
         {currentUser ? (
           <div className="space-y-2">
             {!isSidebarCollapsed ? (
               <div className="flex items-center gap-2.5 overflow-hidden">
-                <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-[#27466d] border border-[#3b5d87] flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-4 h-4 text-sky-400" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p
-                    className="text-xs font-semibold text-slate-200 truncate"
+                    className="text-xs font-semibold text-sky-100 truncate"
                     title={currentUser.email}
                   >
                     {currentUser.email}
@@ -254,7 +312,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto" title={currentUser.email}>
+              <div className="w-8 h-8 rounded-full bg-[#27466d] border border-[#3b5d87] flex items-center justify-center mx-auto" title={currentUser.email}>
                 <ShieldCheck className="w-4 h-4 text-sky-400" />
               </div>
             )}
@@ -264,22 +322,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onLogout();
                 setMobileOpen(false);
               }}
-              title={isSidebarCollapsed ? 'ออกจากระบบ' : undefined}
-              className={`w-full flex items-center justify-center gap-2 ${isSidebarCollapsed ? 'p-2' : 'px-3 py-2'} text-xs font-semibold text-slate-300 bg-slate-800/90 hover:bg-rose-950/40 hover:text-rose-300 hover:border-rose-800/50 rounded-xl border border-slate-700 transition-all shadow-xs`}
+              title={isSidebarCollapsed ? 'Logout' : undefined}
+              className={`w-full flex items-center justify-center gap-2 ${isSidebarCollapsed ? 'p-2' : 'px-3 py-2'} text-xs font-semibold text-sky-200 bg-[#27466d] hover:bg-rose-950/50 hover:text-rose-300 hover:border-rose-700/60 rounded-xl border border-[#3b5d87] transition-all shadow-xs cursor-pointer`}
             >
               <LogOut className="w-4 h-4" />
-              {!isSidebarCollapsed && <span>ออกจากระบบ</span>}
+              {!isSidebarCollapsed && <span>Logout</span>}
             </button>
           </div>
         ) : (
           <div className="space-y-2">
             {!isSidebarCollapsed ? (
-              <div className="flex items-center gap-2 text-xs text-slate-300">
+              <div className="flex items-center gap-2 text-xs text-sky-200">
                 <UserCheck className="w-4 h-4 text-sky-400 shrink-0" />
-                <span className="truncate">โหมดพนักงานลงข้อมูล</span>
+                <span className="truncate">Reporter Mode</span>
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto" title="โหมดพนักงานลงข้อมูล">
+              <div className="w-8 h-8 rounded-full bg-[#27466d] border border-[#3b5d87] flex items-center justify-center mx-auto" title="Reporter Mode">
                 <UserCheck className="w-4 h-4 text-sky-400" />
               </div>
             )}
@@ -288,11 +346,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onOpenLogin();
                 setMobileOpen(false);
               }}
-              title={isSidebarCollapsed ? 'เข้าสู่ระบบ' : undefined}
-              className={`w-full flex items-center justify-center gap-2 ${isSidebarCollapsed ? 'p-2' : 'px-3 py-2'} text-xs font-semibold text-white bg-sky-700 hover:bg-sky-600 rounded-xl transition-all border border-sky-600 shadow-sm`}
+              title={isSidebarCollapsed ? 'Login' : undefined}
+              className={`w-full flex items-center justify-center gap-2 ${isSidebarCollapsed ? 'p-2' : 'px-3 py-2'} text-xs font-semibold text-white bg-sky-600 hover:bg-sky-500 rounded-xl transition-all border border-sky-500 shadow-sm cursor-pointer font-bold`}
             >
               <ShieldCheck className="w-4 h-4" />
-              {!isSidebarCollapsed && <span>เข้าสู่ระบบ ผู้อนุมัติ</span>}
+              {!isSidebarCollapsed && <span>Approver Login</span>}
             </button>
           </div>
         )}
@@ -303,41 +361,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       {/* MOBILE TOP BAR (Only visible on screens < md) */}
-      <div className="w-full md:hidden bg-[#1e293b] text-white px-4 py-3 border-b border-slate-700 flex items-center justify-between sticky top-0 z-30 shadow-md">
+      <div className="w-full md:hidden bg-[#1b365d] text-white px-4 py-3 border-b border-[#2b4b73] flex items-center justify-between sticky top-0 z-30 shadow-md">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-sky-400 to-cyan-500 flex items-center justify-center shadow-md">
-            <Zap className="w-5 h-5 text-slate-950 font-bold" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center shrink-0 shadow-md text-white">
+            <Zap className="w-4 h-4 text-white fill-white/20" />
           </div>
           <div>
-            <h1 className="font-bold text-sm text-slate-100 leading-tight">TDC Utility</h1>
-            <p className="text-[10px] text-sky-300 font-medium">Utility Report</p>
+            <h1 className="font-bold text-sm text-white leading-tight">Utility System</h1>
+            <p className="text-[10px] text-sky-300 font-medium">Energy & Plant</p>
           </div>
         </div>
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded-xl border border-slate-700 transition-all"
+          className="p-2 bg-[#27466d] hover:bg-[#325a8c] text-sky-300 rounded-xl border border-[#3b5d87] transition-all"
           aria-label="Toggle Navigation Menu"
         >
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
-      {/* MOBILE DRAWER OVERLAY */}
+      {/* MOBILE DRAWER OVERLAY (Slides in from the right matching top-right menu button) */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 md:hidden flex">
+        <div className="fixed inset-0 z-40 md:hidden flex justify-end">
           <div
             className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative w-72 bg-[#1e293b] text-white flex flex-col h-full shadow-2xl z-50 animate-in slide-in-from-left duration-200 border-r border-slate-700">
+          <div className="relative w-72 bg-[#1b365d] text-white flex flex-col h-full shadow-2xl z-50 animate-in slide-in-from-right duration-200 border-l border-[#2b4b73]">
             {navContent}
           </div>
         </div>
       )}
 
       {/* DESKTOP SIDEBAR (Visible on screens >= md) */}
-      <aside className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#1e293b] text-white flex-col justify-between h-screen sticky top-0 shadow-xl z-20 shrink-0 border-r border-slate-700/50`}>
+      <aside className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#1b365d] text-white flex-col justify-between h-screen sticky top-0 shrink-0 z-20`}>
         {navContent}
       </aside>
     </>

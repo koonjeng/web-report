@@ -442,31 +442,57 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({ currentUser })
   };
 
   const handleDateChange = (id: string, dateStr: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, lastDoneDate: dateStr } : t))
-    );
+    if (!hasRole) {
+      alert('เฉพาะผู้มีสิทธิ์ (Admin/Approver) เท่านั้นที่สามารถเปลี่ยนวันที่โดยตรงได้\nสำหรับพนักงานทั่วไป กรุณากดปุ่ม "ทำวันนี้" เพื่อส่งขออนุมัติ');
+      return;
+    }
+
     const target = tasks.find((t) => t.id === id);
-    if (target && isSupabaseConfigured && supabase) {
+    if (!target) return;
+
+    if (!confirm(`คุณต้องการยืนยันเปลี่ยนวันที่ทำล่าสุดของ "${target.equipment}" เป็นวันที่ ${dateStr} ใช่หรือไม่?`)) {
+      return;
+    }
+
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, lastDoneDate: dateStr, status: 'approved' } : t))
+    );
+
+    if (isSupabaseConfigured && supabase) {
       supabase.from('maintenance_tasks').upsert({
         id: target.id,
         equipment: target.equipment,
         task_name: target.taskName,
         cycle_days: target.cycleDays,
         last_done_date: dateStr,
-        reporter_name: target.reporterName || '',
-        status: target.status || 'approved',
+        reporter_name: target.reporterName || currentUser?.email || '',
+        status: 'approved',
       }).then(({ error }) => {
         if (error) console.warn('Supabase PM date change error:', error);
       });
     }
+
+    triggerNotify(`อัปเดตวันที่ของ "${target.equipment}" เรียบร้อยแล้ว`);
   };
 
   const handleResetDate = (id: string) => {
+    if (!hasRole) {
+      alert('เฉพาะผู้มีสิทธิ์ (Admin/Approver) เท่านั้นที่สามารถรีเซ็ตวันที่ได้');
+      return;
+    }
+
+    const target = tasks.find((t) => t.id === id);
+    if (!target) return;
+
+    if (!confirm(`คุณต้องการยืนยันรีเซ็ตวันที่ของ "${target.equipment}" ใช่หรือไม่?`)) {
+      return;
+    }
+
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, lastDoneDate: '', status: undefined } : t))
     );
-    const target = tasks.find((t) => t.id === id);
-    if (target && isSupabaseConfigured && supabase) {
+
+    if (isSupabaseConfigured && supabase) {
       supabase.from('maintenance_tasks').upsert({
         id: target.id,
         equipment: target.equipment,
@@ -479,7 +505,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({ currentUser })
         if (error) console.warn('Supabase PM reset date error:', error);
       });
     }
-    triggerNotify('รีเซ็ตวันที่สำเร็จ');
+    triggerNotify(`รีเซ็ตวันที่ของ "${target.equipment}" สำเร็จ`);
   };
 
   // Filter tasks
@@ -660,16 +686,21 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({ currentUser })
                       <div className="relative inline-flex items-center">
                         <input
                           type="date"
+                          disabled={!hasRole}
                           value={t.lastDoneDate}
                           onChange={(e) => handleDateChange(t.id, e.target.value)}
-                          className="w-36 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium cursor-pointer"
+                          title={!hasRole ? 'เฉพาะ Admin/Approver เท่านั้นที่เปลี่ยนวันที่ตรงนี้ได้ (พนักงานทั่วไปกรุณากด "ทำวันนี้")' : 'คลิกเพื่อเลือกวันที่'}
+                          className={`w-36 px-3 py-1.5 text-xs rounded-lg border focus:outline-none font-medium ${!hasRole
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-80'
+                            : 'bg-slate-50 border-slate-200 focus:ring-2 focus:ring-sky-500 cursor-pointer'
+                            }`}
                           style={{ color: 'transparent', caretColor: 'transparent' }}
                         />
                         <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
-                          <span className="text-xs font-medium text-slate-800">
+                          <span className={`text-xs font-medium ${!hasRole ? 'text-slate-500' : 'text-slate-800'}`}>
                             {displayDate || 'dd/mm/yyyy'}
                           </span>
-                          <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <Calendar className={`w-3.5 h-3.5 shrink-0 ${!hasRole ? 'text-slate-300' : 'text-slate-400'}`} />
                         </div>
                       </div>
                     </td>

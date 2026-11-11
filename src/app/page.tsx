@@ -54,7 +54,7 @@ export default function Home() {
           setActiveTab(savedTab || 'dashboard');
         }
       }
-    } catch {}
+    } catch { }
     setIsInitialized(true);
   }, []);
 
@@ -181,7 +181,7 @@ export default function Home() {
 
   const getTitle = () => {
     if (activeTab === 'dashboard') return 'แดชบอร์ดแผนกพลังงาน';
-    if (activeTab === 'overview') return 'ภาพรวมผังพื้นที่ระบบบำบัด (Plant System Overview)';
+    if (activeTab === 'overview') return 'ภาพรวมระบบบำบัดน้ำเสีย Wastewater Treatment System Overview)';
     if (activeTab === 'data-entry') return 'ลงข้อมูลรายวัน';
     if (activeTab === 'energy-report') return 'รายงานพลังงานองค์รวม (Energy Report)';
     if (activeTab === 'maintenance') return 'แผนงานและประวัติซ่อมบำรุง (Maintenance PM)';
@@ -254,13 +254,22 @@ export default function Home() {
           )}
 
           {activeTab === 'pond-history' && (
-            <PondHistoryView
-              currentUser={currentUser}
-              onNavigateToPondEntry={(pondId) => {
-                setActivePondEntryId(pondId);
-                handleTabChange('pond-entry');
-              }}
-            />
+            Boolean(currentUser && (currentUser.role === 'admin' || currentUser.role === 'approver')) ? (
+              <PondHistoryView
+                currentUser={currentUser}
+                onNavigateToPondEntry={(pondId) => {
+                  setActivePondEntryId(pondId);
+                  handleTabChange('pond-entry');
+                }}
+              />
+            ) : (
+              <div className="p-8 text-center bg-white m-8 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <h3 className="text-base font-bold text-rose-600">จำกัดสิทธิ์การเข้าถึง (Access Denied)</h3>
+                <p className="text-xs text-slate-500">
+                  หน้า Pond History (ประวัติลงข้อมูลบ่อบำบัด) อนุญาตให้เฉพาะผู้ใช้งานที่มีสิทธิ์อนุมัติ (Approver / Admin) เข้าดูได้เท่านั้น
+                </p>
+              </div>
+            )
           )}
 
           {activeTab === 'data-entry' && (

@@ -60,16 +60,13 @@ const ZONES: ZoneMarker[] = [
     id: 'polishing1',
     name: 'Polishing 1 (บ่อกักเก็บน้ำทิ้งบำบัดแล้ว 1)',
     category: 'Polishing 1',
-    color: '#a855f7',
-    borderColor: 'border-purple-500',
-    bgLight: 'bg-purple-50 text-purple-900',
-    badgeBg: 'bg-purple-600 text-white',
-    description: 'บ่อพักและกักเก็บน้ำทิ้งผ่านการบำบัดแล้วชุดที่ 1 เพื่อตรวจสอบคุณภาพน้ำก่อนหมุนเวียน/ระบายออก',
-    details: ['COD eff AS (mg/l)', 'SV60 eff Biogas', 'Removal Efficiency (%)'],
-    metrics: [
-      { label: 'COD ขาออก', value: '45', unit: 'mg/L' },
-      { label: 'Removal Eff.', value: '98.5', unit: '%' },
-    ],
+    color: '#0284c7',
+    borderColor: 'border-sky-500',
+    bgLight: 'bg-sky-50 text-slate-900',
+    badgeBg: 'bg-sky-600 text-white',
+    description: 'บ่อกักเก็บน้ำทิ้งผ่านการบำบัดแล้วชุดที่ 1 ตรวจวัดค่า COD ก่อนระบายออก',
+    details: ['COD (mg/L)'],
+    metrics: [],
     polygonPoints: [
       [6.7, 38.0],
       [44.7, 4.8],
@@ -82,16 +79,13 @@ const ZONES: ZoneMarker[] = [
     id: 'polishing2',
     name: 'Polishing 2 (บ่อกักเก็บน้ำทิ้งบำบัดแล้ว 2)',
     category: 'Polishing 2',
-    color: '#84cc16',
-    borderColor: 'border-lime-500',
-    bgLight: 'bg-lime-50 text-lime-900',
-    badgeBg: 'bg-lime-600 text-slate-950',
-    description: 'บ่อสำรองกักเก็บและปรับสภาพน้ำทิ้งบำบัดแล้วชุดที่ 2',
-    details: ['Retention Capacity', 'Overflow Control', 'Water Level Check'],
-    metrics: [
-      { label: 'Free Capacity', value: '65', unit: '%' },
-      { label: 'Water Level', value: '1.8', unit: 'm' },
-    ],
+    color: '#0284c7',
+    borderColor: 'border-sky-500',
+    bgLight: 'bg-sky-50 text-slate-900',
+    badgeBg: 'bg-sky-600 text-white',
+    description: 'บ่อกักเก็บและปรับสภาพน้ำทิ้งบำบัดแล้วชุดที่ 2 ตรวจวัดค่า COD',
+    details: ['COD (mg/L)'],
+    metrics: [],
     polygonPoints: [
       [59.8, 15.5],
       [90.8, 20.2],
@@ -104,16 +98,13 @@ const ZONES: ZoneMarker[] = [
     id: 'biogas2',
     name: 'Biogas 2 (บ่อหมักก๊าซชีวภาพ 2)',
     category: 'Biogas 2',
-    color: '#e2e8f0',
-    borderColor: 'border-slate-300',
-    bgLight: 'bg-slate-100 text-slate-900',
-    badgeBg: 'bg-slate-800 text-white',
-    description: 'บ่อคลุมผ้ายาง HDPE สำหรับหมักก๊าซชีวภาพ Methane ชุดที่ 2',
-    details: ['Flow Feed Mix2', 'Biogas Generate (Nm³)', '% CH4 / % H2S Monitoring'],
-    metrics: [
-      { label: 'Biogas Flow', value: '1,250', unit: 'Nm³/h' },
-      { label: 'Methane CH4', value: '62.4', unit: '%' },
-    ],
+    color: '#6366f1',
+    borderColor: 'border-indigo-500',
+    bgLight: 'bg-indigo-50 text-slate-900',
+    badgeBg: 'bg-indigo-600 text-white',
+    description: 'บ่อคลุมผ้ายาง HDPE สำหรับหมักก๊าซชีวภาพชุดที่ 2 (SV60, ปริมาณแก๊ส %)',
+    details: ['SV60 (mg/L)', 'ปริมาณแก๊ส (%)'],
+    metrics: [],
     polygonPoints: [
       [38.7, 26.5],
       [88.2, 21.0],
@@ -127,16 +118,13 @@ const ZONES: ZoneMarker[] = [
     id: 'biogas1',
     name: 'Biogas 1 (บ่อหมักก๊าซชีวภาพ 1)',
     category: 'Biogas 1',
-    color: '#eab308',
-    borderColor: 'border-amber-500',
-    bgLight: 'bg-amber-50 text-amber-900',
-    badgeBg: 'bg-amber-600 text-white',
-    description: 'บ่อหมักก๊าซชีวภาพหลักชุดที่ 1 ผลิตก๊าซเพื่อจ่ายเข้า Boiler และระบบเผาก๊าซ',
-    details: ['Biogas Reserve', 'Pressure Control', 'Condensate Drain'],
-    metrics: [
-      { label: 'Biogas Stock', value: '850', unit: 'm³' },
-      { label: 'Pressure', value: '12.5', unit: 'mbar' },
-    ],
+    color: '#6366f1',
+    borderColor: 'border-indigo-500',
+    bgLight: 'bg-indigo-50 text-slate-900',
+    badgeBg: 'bg-indigo-600 text-white',
+    description: 'บ่อหมักก๊าซชีวภาพหลักชุดที่ 1 ตรวจวัดค่าตะกอน SV60',
+    details: ['SV60 (mg/L)'],
+    metrics: [],
     polygonPoints: [
       [30.8, 89.8],
       [60.0, 72.8],
@@ -149,16 +137,13 @@ const ZONES: ZoneMarker[] = [
     id: 'aeration',
     name: 'Aeration (บ่อปรับสภาพ & เติมอากาศดิบ)',
     category: 'Aeration',
-    color: '#f97316',
-    borderColor: 'border-orange-500',
-    bgLight: 'bg-orange-50 text-orange-900',
-    badgeBg: 'bg-orange-600 text-white',
-    description: 'บ่อพักน้ำเสียดิบและปรับสภาพน้ำเสียก่อนเข้าสู่ระบบบำบัดขั้นสูง',
-    details: ['COD Native', 'CODt Mix1', 'VFA Mix1'],
-    metrics: [
-      { label: 'COD Native', value: '14,500', unit: 'mg/L' },
-      { label: 'VFA Mix1', value: '1,200', unit: 'mg/L' },
-    ],
+    color: '#0d9488',
+    borderColor: 'border-teal-500',
+    bgLight: 'bg-teal-50 text-slate-900',
+    badgeBg: 'bg-teal-600 text-white',
+    description: 'บ่อพักน้ำเสียดิบและปรับสภาพเติมอากาศ (ปริมาณน้ำ, COD)',
+    details: ['ปริมาณน้ำ (m³)', 'COD (mg/L)'],
+    metrics: [],
     polygonPoints: [
       [15.2, 42.0],
       [55.9, 34.0],
@@ -171,16 +156,13 @@ const ZONES: ZoneMarker[] = [
     id: 'as',
     name: 'AS (บ่อเติมอากาศ Activated Sludge)',
     category: 'AS',
-    color: '#ef4444',
-    borderColor: 'border-rose-500',
-    bgLight: 'bg-rose-50 text-rose-900',
-    badgeBg: 'bg-rose-600 text-white',
-    description: 'บ่อเติมอากาศระบบ Activated Sludge (AS) ขนาดใหญ่เพื่อย่อยสลายสารอินทรีย์',
-    details: ['COD Loading (Kg/day)', 'Air Blower Status', 'Dissolved Oxygen (DO)'],
-    metrics: [
-      { label: 'COD Loading', value: '8,400', unit: 'kg/d' },
-      { label: 'Blower Active', value: '4/4', unit: 'Units' },
-    ],
+    color: '#2563eb',
+    borderColor: 'border-blue-500',
+    bgLight: 'bg-blue-50 text-slate-900',
+    badgeBg: 'bg-blue-600 text-white',
+    description: 'บ่อเติมอากาศระบบ Activated Sludge (สีน้ำ, ปริมาณน้ำ, COD)',
+    details: ['สีน้ำ', 'ปริมาณน้ำ (m³)', 'COD (mg/L)'],
+    metrics: [],
     polygonPoints: [
       [57.5, 35.8],
       [89.0, 43.5],
@@ -191,18 +173,15 @@ const ZONES: ZoneMarker[] = [
   },
   {
     id: 'clarify',
-    name: 'Clarify (รางแยก & ส่งน้ำวน)',
+    name: 'Clarify (รางแยก & บ่อตกตะกอน)',
     category: 'Clarify',
-    color: '#38bdf8',
-    borderColor: 'border-sky-500',
-    bgLight: 'bg-sky-50 text-sky-900',
-    badgeBg: 'bg-sky-600 text-white',
-    description: 'ช่องรางแยกและกระจายน้ำเสียระหว่างบ่อ Aeration และบ่อ AS',
-    details: ['Distribution Channel', 'Flow Control', 'Sludge Recycle Line'],
-    metrics: [
-      { label: 'Flow Rate', value: '350', unit: 'm³/h' },
-      { label: 'Recycle Ratio', value: '1:1.5', unit: '' },
-    ],
+    color: '#06b6d4',
+    borderColor: 'border-cyan-500',
+    bgLight: 'bg-cyan-50 text-slate-900',
+    badgeBg: 'bg-cyan-600 text-white',
+    description: 'ช่องรางแยกและบ่อตกตะกอน Clarifier (ปริมาณน้ำ, COD)',
+    details: ['ปริมาณน้ำ (m³)', 'COD (mg/L)'],
+    metrics: [],
     polygonPoints: [
       [47.4, 52.2],
       [55.9, 34.0],
@@ -215,16 +194,13 @@ const ZONES: ZoneMarker[] = [
     id: 'ss',
     name: 'SS (บ่อตกตะกอนแขวนลอย / Sludge Settling)',
     category: 'SS',
-    color: '#ec4899',
-    borderColor: 'border-pink-500',
-    bgLight: 'bg-pink-50 text-pink-900',
-    badgeBg: 'bg-pink-600 text-white',
-    description: 'บ่อแยกตกตะกอนสารแขวนลอย (Suspended Solids - SS) และสูบสลัดตะกอน',
-    details: ['Sludge Removal (Ton)', 'Sludge Trips (เที่ยว)', 'Sludge Cost (บาท)'],
-    metrics: [
-      { label: 'ตะกอนขนออก', value: '171.9', unit: 'Ton' },
-      { label: 'จำนวนเที่ยว', value: '14', unit: 'Trips' },
-    ],
+    color: '#c026d3',
+    borderColor: 'border-fuchsia-500',
+    bgLight: 'bg-fuchsia-50 text-slate-900',
+    badgeBg: 'bg-fuchsia-600 text-white',
+    description: 'บ่อแยกตกตะกอนสารแขวนลอยและตะกอนสลัดจ์ (SV30)',
+    details: ['SV30'],
+    metrics: [],
     polygonPoints: [
       [59.5, 62.0],
       [76.8, 64.5],
@@ -234,19 +210,16 @@ const ZONES: ZoneMarker[] = [
     labelCenter: [68, 69],
   },
   {
-    id: 'mix2',
-    name: 'Mix 2 (บ่อผสมและปรับสภาพ 2)',
-    category: 'Mix 2',
-    color: '#22c55e',
+    id: 'mix1',
+    name: 'Mix 1 (บ่อผสมและปรับสภาพ 1)',
+    category: 'Mix 1',
+    color: '#059669',
     borderColor: 'border-emerald-500',
-    bgLight: 'bg-emerald-50 text-emerald-900',
+    bgLight: 'bg-emerald-50 text-slate-900',
     badgeBg: 'bg-emerald-600 text-white',
-    description: 'บ่อกวนผสมและปรับสภาวะกรด-ด่างก่อนป้อนเข้าบ่อ Biogas 1',
-    details: ['pH Mix2', 'VFA Mix1', 'Flow Feed Mix2'],
-    metrics: [
-      { label: 'pH Value', value: '6.9', unit: 'pH' },
-      { label: 'Feed Rate', value: '120', unit: 'm³/h' },
-    ],
+    description: 'บ่อกวนผสมและปรับสภาวะกรด-ด่างก่อนป้อนเข้าบ่อ Biogas 1 (Flow m³/h, pH 3-4)',
+    details: ['Flow (m³/h)', 'pH (ช่วง 3.0 - 4.0)'],
+    metrics: [],
     polygonPoints: [
       [31.0, 89.5],
       [36.5, 98.0],
@@ -257,27 +230,70 @@ const ZONES: ZoneMarker[] = [
   },
   {
     id: 'scrubber',
-    name: 'Scrubber / MW 2 (ระบบดักก๊าซ & ควบคุม)',
-    category: 'Scrubber / MW 2',
-    color: '#f43f5e',
-    borderColor: 'border-rose-600',
-    bgLight: 'bg-rose-50 text-rose-950',
-    badgeBg: 'bg-rose-700 text-white',
-    description: 'อาคารหอกำจัดก๊าซ H2S Scrubber และตู้ควบคุมไฟฟ้ามิเตอร์ MW 2',
-    details: ['Scrubber Efficiency', 'H2S Removal', 'MW 2 Meter Power'],
-    metrics: [
-      { label: 'H2S Removal', value: '99.2', unit: '%' },
-      { label: 'Power Rating', value: '380', unit: 'V' },
-    ],
+    name: 'Scrubber (หอกำจัดก๊าซ H2S)',
+    category: 'Scrubber',
+    color: '#d97706',
+    borderColor: 'border-amber-500',
+    bgLight: 'bg-amber-50 text-slate-900',
+    badgeBg: 'bg-amber-600 text-white',
+    description: 'อาคารหอดักและกำจัดก๊าซ H2S Scrubber (%H2S, %CH4)',
+    details: ['%H2S', '%CH4'],
+    metrics: [],
     polygonPoints: [
       [86.5, 26.0],
       [89.5, 26.5],
+      [89.0, 30.0],
+      [86.0, 29.5],
+    ],
+    labelCenter: [87.5, 28],
+  },
+  {
+    id: 'mix2',
+    name: 'Mix 2 (บ่อผสมและปรับสภาพ 2)',
+    category: 'Mix 2',
+    color: '#059669',
+    borderColor: 'border-emerald-500',
+    bgLight: 'bg-emerald-50 text-slate-900',
+    badgeBg: 'bg-emerald-600 text-white',
+    description: 'บ่อกวนผสมและปรับสภาพน้ำเข้าระบบ 2 (Flow m³/h, pH 6-7)',
+    details: ['Flow (m³/h)', 'pH (ช่วง 6.0 - 7.0)'],
+    metrics: [],
+    polygonPoints: [
+      [86.5, 30.2],
+      [89.5, 30.7],
       [89.0, 34.0],
       [86.0, 33.5],
     ],
-    labelCenter: [88, 30],
+    labelCenter: [87.5, 32],
   },
 ];
+
+// Mockup Blueprint styling helpers
+const getZoneGradientId = (id: string) => {
+  if (id.startsWith('polishing')) return 'url(#polishingGrad)';
+  if (id.startsWith('biogas')) return 'url(#biogasGrad)';
+  if (id === 'aeration') return 'url(#aerationGrad)';
+  if (id === 'as') return 'url(#asGrad)';
+  if (id === 'clarify') return 'url(#clarifyGrad)';
+  if (id === 'ss') return 'url(#ssGrad)';
+  if (id.startsWith('mix')) return 'url(#mixGrad)';
+  if (id === 'scrubber') return 'url(#scrubberGrad)';
+  return 'url(#polishingGrad)';
+};
+
+const getZoneStroke = (id: string, isSelected: boolean, isHovered: boolean) => {
+  if (isSelected) return '#f59e0b';
+  if (isHovered) return '#38bdf8';
+  if (id.startsWith('polishing')) return '#38bdf8';
+  if (id.startsWith('biogas')) return '#818cf8';
+  if (id === 'aeration') return '#2dd4bf';
+  if (id === 'as') return '#60a5fa';
+  if (id === 'clarify') return '#7dd3fc';
+  if (id === 'ss') return '#f472b6';
+  if (id.startsWith('mix')) return '#34d399';
+  if (id === 'scrubber') return '#fbbf24';
+  return '#94a3b8';
+};
 
 export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntry }) => {
   const [selectedZone, setSelectedZone] = useState<ZoneMarker | null>(ZONES[0]);
@@ -320,6 +336,84 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
     );
   };
 
+  // Helper to evaluate metric status & color thresholds (matches Pond Entry rules)
+  const getMetricStatus = (pondId: string, key: string, val: string | number | undefined) => {
+    const cleanId = pondId.replace('-', '').toLowerCase();
+    const valNum = typeof val === 'number' ? val : parseFloat(String(val || ''));
+    const k = key.toLowerCase();
+
+    if (isNaN(valNum)) {
+      return {
+        cardBg: 'bg-slate-50 border-slate-200',
+        textClass: 'text-slate-900',
+        badge: null,
+      };
+    }
+
+    // Mix 1: pH (3.0 - 4.0 is green, outside is red)
+    if (cleanId === 'mix1' && k.includes('ph')) {
+      if (valNum >= 3.0 && valNum <= 4.0) {
+        return {
+          cardBg: 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400/20',
+          textClass: 'text-emerald-950',
+          badge: { label: '✓ ในเกณฑ์ (3.0-4.0)', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+        };
+      } else {
+        return {
+          cardBg: 'bg-rose-50 border-rose-400 ring-2 ring-rose-400/30',
+          textClass: 'text-rose-950 font-black',
+          badge: { label: '⚠ นอกเกณฑ์ (3.0-4.0)', color: 'bg-rose-100 text-rose-800 border-rose-300' },
+        };
+      }
+    }
+
+    // Mix 2: pH (6.0 - 7.0 is green, outside is red)
+    if (cleanId === 'mix2' && k.includes('ph')) {
+      if (valNum >= 6.0 && valNum <= 7.0) {
+        return {
+          cardBg: 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400/20',
+          textClass: 'text-emerald-950',
+          badge: { label: '✓ ในเกณฑ์ (6.0-7.0)', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+        };
+      } else {
+        return {
+          cardBg: 'bg-rose-50 border-rose-400 ring-2 ring-rose-400/30',
+          textClass: 'text-rose-950 font-black',
+          badge: { label: '⚠ นอกเกณฑ์ (6.0-7.0)', color: 'bg-rose-100 text-rose-800 border-rose-300' },
+        };
+      }
+    }
+
+    // Biogas 2: SV60 (<= 10 green, >10 orange, >50 red)
+    if (cleanId === 'biogas2' && k.includes('sv60')) {
+      if (valNum > 50) {
+        return {
+          cardBg: 'bg-rose-50 border-rose-400 ring-2 ring-rose-400/30',
+          textClass: 'text-rose-950 font-black',
+          badge: { label: '🔴 สูงผิดปกติ (>50)', color: 'bg-rose-100 text-rose-800 border-rose-300' },
+        };
+      } else if (valNum > 10) {
+        return {
+          cardBg: 'bg-amber-50 border-amber-400 ring-2 ring-amber-400/30',
+          textClass: 'text-amber-950 font-black',
+          badge: { label: '🟠 เฝ้าระวัง (>10)', color: 'bg-amber-100 text-amber-800 border-amber-300' },
+        };
+      } else {
+        return {
+          cardBg: 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400/20',
+          textClass: 'text-emerald-950',
+          badge: { label: '🟢 ปกติ (≤10)', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+        };
+      }
+    }
+
+    return {
+      cardBg: 'bg-slate-50 border-slate-200',
+      textClass: 'text-slate-900',
+      badge: null,
+    };
+  };
+
   return (
     <div className="space-y-6 p-4 md:p-8 bg-slate-50 min-h-[calc(100vh-73px)] font-sans text-slate-800 pb-24">
       {/* Header Banner & Date Filter Bar */}
@@ -327,7 +421,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
         <div>
           <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <Map className="w-6 h-6 text-sky-600" />
-            <span>ภาพรวมผังผิวน้ำ & โซนบ่อบำบัด (Plant Overview Map)</span>
+            <span>ระบบบำบัดน้ำเสีย (Wastewater Treatment Plant)</span>
             <span className="text-xs bg-sky-100 text-sky-800 font-extrabold px-3 py-1 rounded-full border border-sky-200">
               ชื่อบ่อตรงตามผังภาพถ่าย
             </span>
@@ -417,19 +511,18 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
       {/* Main Container: Interactive Map View & Details Info Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: High-Res Aerial Map Image with Name Badges */}
-        <div className={`lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col ${
-          isFullscreen ? 'fixed inset-0 z-50 rounded-none border-none p-4 bg-slate-950/95 overflow-y-auto' : ''
-        }`}>
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-900 text-white shrink-0">
+        <div className={`lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 rounded-none border-none p-4 bg-slate-950/95 overflow-y-auto' : ''
+          }`}>
+          <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900 text-white shrink-0">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-sky-400" />
-              <span className="font-bold text-xs tracking-wide uppercase">
-                ผังผิวน้ำพร้อมป้ายชื่อบ่อ (Interactive Pond Map)
+              <span className="font-bold text-xs tracking-wide uppercase text-slate-200">
+                ผังจำลองระบบบ่อบำบัดน้ำเสีย & ก๊าซชีวภาพ (Wastewater Plant Mockup Diagram)
               </span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">
-                💡 คลิกที่ตัวหนังสือป้ายชื่อบ่อในภาพเพื่อดูข้อมูล
+                💡 คลิกที่ตัวหนังสือป้ายชื่อบ่อในผังเพื่อเปิดดูข้อมูล
               </span>
               {isFullscreen && (
                 <button
@@ -442,35 +535,193 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
             </div>
           </div>
 
-          {/* Map Viewport with Clean Text Label Badges (No Box Outline on Map) */}
-          <div className="relative overflow-hidden bg-slate-950 flex items-center justify-center p-1 min-h-[450px]">
-            <div className="relative w-full inline-block">
-              {/* Base Aerial Image */}
-              <img
-                src="/overview_map.jpg"
-                alt="TDC Utility Plant Aerial Overview Map"
-                className="w-full h-auto object-contain block rounded-xl shadow-lg border border-slate-800"
-              />
-
-              {/* Invisible Interactive Polygon Click Areas (for clicking image directly) */}
+          {/* Map Viewport: High-Tech Schematic Plant Layout Mockup */}
+          <div className="relative overflow-hidden bg-[#08101d] flex items-center justify-center p-2 sm:p-4 min-h-[460px] select-none">
+            <div className="relative w-full aspect-[16/10] sm:aspect-[16/9.5] max-w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80 bg-[#070e1a]">
               <svg
-                className="absolute inset-0 w-full h-full pointer-events-none rounded-xl"
+                className="w-full h-full block rounded-2xl"
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
               >
+                <defs>
+                  {/* Subtle Blueprint Grid Pattern */}
+                  <pattern id="blueprint-grid" width="4" height="4" patternUnits="userSpaceOnUse">
+                    <path d="M 4 0 L 0 0 0 4" fill="none" stroke="#17263c" strokeWidth="0.15" />
+                    <circle cx="4" cy="4" r="0.25" fill="#223955" />
+                  </pattern>
+
+                  {/* Tech Grid Major Accent */}
+                  <pattern id="blueprint-major-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#253e61" strokeWidth="0.25" strokeDasharray="1 1" />
+                  </pattern>
+
+                  {/* Gradients for each pond type */}
+                  <linearGradient id="polishingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#0284c7" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#0369a1" stopOpacity="0.75" />
+                  </linearGradient>
+
+                  <linearGradient id="biogasGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#312e81" stopOpacity="0.8" />
+                  </linearGradient>
+
+                  <linearGradient id="aerationGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#0d9488" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#115e59" stopOpacity="0.75" />
+                  </linearGradient>
+
+                  <linearGradient id="asGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#2563eb" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#1e40af" stopOpacity="0.75" />
+                  </linearGradient>
+
+                  <linearGradient id="clarifyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#0891b2" stopOpacity="0.8" />
+                  </linearGradient>
+
+                  <linearGradient id="ssGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#c026d3" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#86198f" stopOpacity="0.75" />
+                  </linearGradient>
+
+                  <linearGradient id="mixGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#047857" stopOpacity="0.8" />
+                  </linearGradient>
+
+                  <linearGradient id="scrubberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#b45309" stopOpacity="0.85" />
+                  </linearGradient>
+
+                  {/* Flow pipeline stroke glow */}
+                  <filter id="pipelineGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="0.4" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+
+                {/* Base Blueprint Grids */}
+                <rect width="100" height="100" fill="#08101d" />
+                <rect width="100" height="100" fill="url(#blueprint-grid)" />
+                <rect width="100" height="100" fill="url(#blueprint-major-grid)" />
+
+                {/* Plant Layout Boundary / Perimeter */}
+                <rect
+                  x="2"
+                  y="2"
+                  width="96"
+                  height="96"
+                  rx="3"
+                  fill="none"
+                  stroke="#1c3553"
+                  strokeWidth="0.4"
+                  strokeDasharray="2 2"
+                />
+
+                {/* Roadways / Access Lanes Schematic */}
+                <path
+                  d="M 3 39 L 97 35 M 46 3 L 46 97 M 84 3 L 84 97"
+                  stroke="#122438"
+                  strokeWidth="2.2"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+
+                {/* Inter-Pond Process Pipeline Flow Lines with Directional Dashes */}
+                <g filter="url(#pipelineGlow)">
+                  {/* Mix 1 -> Biogas 1 */}
+                  <path
+                    d="M 32 93 L 42 90 L 48 86"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="0.5"
+                    strokeDasharray="1.2 1"
+                  />
+                  {/* Biogas 1 -> Aeration */}
+                  <path
+                    d="M 48 76 L 44 65 L 35 48"
+                    fill="none"
+                    stroke="#818cf8"
+                    strokeWidth="0.5"
+                    strokeDasharray="1.2 1"
+                  />
+                  {/* Mix 2 -> Biogas 2 */}
+                  <path
+                    d="M 87 32 L 80 30 L 68 28"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="0.5"
+                    strokeDasharray="1.2 1"
+                  />
+                  {/* Biogas 2 -> Scrubber */}
+                  <path
+                    d="M 75 27 L 86 27"
+                    fill="none"
+                    stroke="#fbbf24"
+                    strokeWidth="0.5"
+                    strokeDasharray="1 1"
+                  />
+                  {/* Aeration -> Clarify -> AS */}
+                  <path
+                    d="M 38 44 L 52 44 L 65 48"
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth="0.6"
+                    strokeDasharray="1.5 1"
+                  />
+                  {/* AS -> SS */}
+                  <path
+                    d="M 70 56 L 68 65"
+                    fill="none"
+                    stroke="#f472b6"
+                    strokeWidth="0.5"
+                    strokeDasharray="1.2 1"
+                  />
+                  {/* SS / Clarify -> Polishing 1 & 2 */}
+                  <path
+                    d="M 68 70 L 52 50 L 30 30"
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth="0.5"
+                    strokeDasharray="1.2 1"
+                  />
+                  <path
+                    d="M 52 40 L 62 25 L 70 20"
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth="0.5"
+                    strokeDasharray="1.2 1"
+                  />
+                </g>
+
+                {/* Render Zone Polygons */}
                 {ZONES.map((zone) => {
                   const pointsString = zone.polygonPoints.map((pt) => `${pt[0]},${pt[1]}`).join(' ');
                   const isSelected = selectedZone?.id === zone.id;
                   const isHovered = hoveredZone?.id === zone.id;
+                  const gradId = getZoneGradientId(zone.id);
+                  const strokeColor = getZoneStroke(zone.id, isSelected, isHovered);
 
                   return (
-                    <g key={zone.id} className="pointer-events-auto cursor-pointer">
+                    <g key={zone.id} className="cursor-pointer transition-all duration-200">
+                      {/* Polygon Shape with Gradient Fill */}
                       <polygon
                         points={pointsString}
-                        fill={zone.color}
-                        fillOpacity={isSelected ? 0.25 : isHovered ? 0.15 : 0}
-                        stroke="none"
-                        className="transition-all duration-200"
+                        fill={gradId}
+                        stroke={strokeColor}
+                        strokeWidth={isSelected ? '0.9' : isHovered ? '0.7' : '0.4'}
+                        strokeLinejoin="round"
+                        className="transition-all duration-300"
+                        style={{
+                          filter: isSelected
+                            ? 'drop-shadow(0 0 5px rgba(245,158,11,0.7))'
+                            : isHovered
+                              ? 'drop-shadow(0 0 4px rgba(56,189,248,0.6))'
+                              : 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))',
+                        }}
                         onMouseEnter={() => setHoveredZone(zone)}
                         onMouseLeave={() => setHoveredZone(null)}
                         onClick={() => handleZoneClick(zone)}
@@ -478,9 +729,16 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                     </g>
                   );
                 })}
+
+                {/* Technical Direction Badges & Plant Flow Labels */}
+                <g className="pointer-events-none select-none text-[2.2px] font-mono font-bold">
+                  <text x="4" y="96" fill="#34d399">↳ WASTEWATER INFLOW (น้ำเสียเข้าระบบ)</text>
+                  <text x="4" y="7" fill="#38bdf8">↱ TREATED EFFLUENT (น้ำบำบัดแล้ว)</text>
+                  <text x="73" y="10" fill="#fbbf24">⚡ BIOGAS TO POWER (ก๊าซชีวภาพ)</text>
+                </g>
               </svg>
 
-              {/* Interactive Pond Name Text Badges Matched Exactly with Image Annotations */}
+              {/* Interactive Pond Name Text Badges */}
               {ZONES.map((zone) => {
                 const isSelected = selectedZone?.id === zone.id;
                 const isHovered = hoveredZone?.id === zone.id;
@@ -495,13 +753,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                       left: `${zone.labelCenter[0]}%`,
                       top: `${zone.labelCenter[1]}%`,
                     }}
-                    className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black shadow-xl border backdrop-blur-md ${
-                      isSelected
-                        ? 'bg-slate-900 text-amber-300 border-amber-400 ring-4 ring-amber-400/40 scale-110 text-xs sm:text-sm'
-                        : isHovered
-                        ? 'bg-slate-900/95 text-emerald-300 border-emerald-400 scale-105 text-xs'
-                        : 'bg-slate-900/85 text-emerald-400 border-slate-700 hover:bg-slate-900 text-[11px] sm:text-xs'
-                    }`}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 z-10 flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl font-black shadow-xl border backdrop-blur-md ${isSelected
+                      ? 'bg-slate-900 text-amber-300 border-amber-400 ring-4 ring-amber-400/40 scale-110 text-xs sm:text-sm'
+                      : isHovered
+                        ? 'bg-slate-900/95 text-sky-200 border-sky-400 scale-105 text-[11px] sm:text-xs'
+                        : 'bg-slate-900/85 text-slate-100 border-slate-700/80 hover:bg-slate-900 text-[10px] sm:text-xs'
+                      }`}
                   >
                     <span
                       className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse"
@@ -514,13 +771,29 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
             </div>
           </div>
 
-          <div className="p-3.5 bg-slate-900 border-t border-slate-800 text-slate-300 text-xs font-semibold flex flex-wrap items-center justify-between gap-2 shrink-0">
-            <span className="flex items-center gap-1.5 text-sky-400">
-              <Info className="w-4 h-4 shrink-0" />
-              <span>คลิกที่ป้ายชื่อตัวหนังสือในภาพ (เช่น Polishing 1, Biogas 1, AS) เพื่อเปิดการ์ดแสดงข้อมูล</span>
-            </span>
-            <span className="text-[11px] text-emerald-400 bg-slate-800 px-2.5 py-1 rounded-md font-bold">
-              ✓ เปิดการ์ด Popup เมื่อคลิก
+          {/* Bottom Schematic Legend Bar */}
+          <div className="p-3.5 bg-slate-900 border-t border-slate-800 text-slate-300 text-xs font-semibold flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center flex-wrap gap-2 text-[11px]">
+              <span className="text-slate-400 font-bold mr-1">สัญลักษณ์ผังจำลอง:</span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-950/80 border border-sky-700 text-sky-300">
+                <span className="w-2 h-2 rounded-full bg-sky-400" />
+                บ่อกักเก็บน้ำ (Polishing)
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-950/80 border border-indigo-700 text-indigo-300">
+                <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                บ่อก๊าซชีวภาพ (Biogas)
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-950/80 border border-teal-700 text-teal-300">
+                <span className="w-2 h-2 rounded-full bg-teal-400" />
+                บ่อเติมอากาศ (Aeration/AS)
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-950/80 border border-emerald-700 text-emerald-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                บ่อผสม (Mix)
+              </span>
+            </div>
+            <span className="text-[11px] text-emerald-400 bg-slate-800 px-2.5 py-1 rounded-md font-bold shrink-0">
+              ✓ คลิกบ่อเพื่อดูการ์ดข้อมูล & พารามิเตอร์
             </span>
           </div>
         </div>
@@ -549,35 +822,113 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                 </p>
               </div>
 
-              {/* Key Real-time Metrics Cards */}
-              <div className="grid grid-cols-2 gap-2.5 pt-1">
-                {selectedZone.metrics.map((m, idx) => (
-                  <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200/90 text-center">
-                    <span className="text-[11px] font-bold text-slate-500 block">{m.label}</span>
-                    <div className="text-lg font-black text-slate-900 mt-0.5 tracking-tight">
-                      {m.value} <span className="text-xs font-extrabold text-slate-500">{m.unit}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* Real Supabase Metrics from Database */}
+              {(() => {
+                const sub = getSubmissionForZone(selectedZone.id);
+                const isMatchDate = sub?.report_date === filterDate;
+                const photos = sub?.image_urls && sub.image_urls.length > 0 ? sub.image_urls : sub?.image_url ? [sub.image_url] : [];
 
-              {/* Parameter checklist */}
-              <div className="pt-2 border-t border-slate-100 space-y-2">
-                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
-                  พารามิเตอร์และตัววัดระบบ:
-                </span>
-                <div className="space-y-1.5">
-                  {selectedZone.details.map((d, idx) => (
-                    <div
-                      key={idx}
-                      className="text-xs font-bold px-3 py-2 rounded-xl bg-slate-100/80 text-slate-800 border border-slate-200 flex items-center gap-2"
-                    >
-                      <TrendingUp className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                      <span>{d}</span>
+                return (
+                  <div className="space-y-3 pt-1">
+                    {/* Status Badge */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        พารามิเตอร์ตรวจวัดล่าสุด:
+                      </span>
+                      {sub && (
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${isMatchDate ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'}`}>
+                          {isMatchDate ? `วันที่ ${filterDate.split('-').reverse().join('/')}` : `ล่าสุด: ${sub.report_date.split('-').reverse().join('/')}`}
+                        </span>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
+
+                    {/* Real Metrics Grid with Real-time Alert Styling */}
+                    {sub && Object.keys(sub.metrics).length > 0 ? (
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {Object.entries(sub.metrics).map(([key, val], idx) => {
+                          const status = getMetricStatus(selectedZone.id, key, val);
+                          return (
+                            <div key={idx} className={`p-3 rounded-2xl border text-center transition-all ${status.cardBg}`}>
+                              <span className="text-[11px] font-bold text-slate-500 block uppercase truncate" title={key}>
+                                {key.replace(/_/g, ' ')}
+                              </span>
+                              <div className={`text-base sm:text-lg font-black mt-0.5 tracking-tight ${status.textClass}`}>
+                                {val}
+                              </div>
+                              {status.badge && (
+                                <span className={`inline-block mt-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${status.badge.color}`}>
+                                  {status.badge.label}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-1">
+                        <p className="text-xs font-bold text-slate-600">ยังไม่มีข้อมูลการตรวจวัดในวันที่เลือก</p>
+                        <p className="text-[11px] text-slate-400 font-medium">ข้อมูลจริงจะแสดงเมื่อมีการบันทึกผ่านระบบ</p>
+                      </div>
+                    )}
+
+                    {/* Enlarged Real Photos Preview */}
+                    {photos.length > 0 && (
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5 text-sky-900">
+                            <ImageIcon className="w-4 h-4 text-sky-600" />
+                            <span>รูปถ่ายหน้างาน ({photos.length} รูป - คลิกดูรูปใหญ่):</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium">บันทึกโดย: {sub?.reporter_name}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {photos.map((photoUrl, pIdx) => (
+                            <div
+                              key={pIdx}
+                              onClick={() => setSelectedFullPhoto(photoUrl)}
+                              className="rounded-2xl overflow-hidden border border-slate-200 cursor-pointer hover:border-sky-500 hover:shadow-lg transition-all h-36 bg-slate-900 relative group"
+                            >
+                              <img
+                                src={photoUrl}
+                                alt={`Photo ${pIdx + 1}`}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
+                              />
+                              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                <span className="text-xs font-black text-white bg-sky-600 px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+                                  🔍 ดูรูปขนาดใหญ่
+                                </span>
+                              </div>
+                              <span className="absolute bottom-2 right-2 bg-slate-950/80 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md backdrop-blur-xs">
+                                #{pIdx + 1}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Remarks if any */}
+                    {sub?.remarks && (
+                      <div className="bg-sky-50 p-2.5 rounded-xl border border-sky-200 text-xs text-sky-950 font-medium">
+                        <strong>หมายเหตุ:</strong> {sub.remarks}
+                      </div>
+                    )}
+
+                    {/* Quick Button to Enter Data */}
+                    {onNavigateToPondEntry && (
+                      <div className="pt-2">
+                        <button
+                          onClick={() => onNavigateToPondEntry(selectedZone.id)}
+                          className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-500 active:scale-98 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <PlusCircle className="w-4 h-4" />
+                          <span>+ บันทึกข้อมูลบ่อนี้ ({selectedZone.name.split('(')[0]})</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           ) : (
             <div className="bg-white p-6 rounded-2xl border border-slate-200 text-center shadow-xs text-slate-400 font-medium">
@@ -600,11 +951,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                   <div
                     key={zone.id}
                     onClick={() => handleZoneClick(zone)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                      isSelected
-                        ? `${zone.borderColor} ${zone.bgLight} ring-2 ring-sky-400/20 shadow-sm`
-                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/70 hover:bg-white'
-                    }`}
+                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${isSelected
+                      ? `${zone.borderColor} ${zone.bgLight} ring-2 ring-sky-400/20 shadow-sm`
+                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/70 hover:bg-white'
+                      }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span
@@ -680,33 +1030,33 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
               {((sub?.image_urls && sub.image_urls.length > 0) || sub?.image_url) && (() => {
                 const photos = sub.image_urls && sub.image_urls.length > 0 ? sub.image_urls : [sub.image_url!];
                 return (
-                  <div className="space-y-1.5">
-                    <span className="text-[11px] font-bold text-slate-700 flex items-center justify-between">
-                      <span className="flex items-center gap-1 text-sky-800">
-                        <ImageIcon className="w-3.5 h-3.5 text-sky-600" />
-                        <span>รูปถ่ายหน้างาน ({photos.length} รูป - คลิกเพื่อดูรูปใหญ่):</span>
+                  <div className="space-y-2 pt-1 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5 text-sky-900">
+                        <ImageIcon className="w-4 h-4 text-sky-600" />
+                        <span>รูปถ่ายหน้างาน ({photos.length} รูป - คลิกดูรูปใหญ่):</span>
                       </span>
-                      <span className="text-[10px] text-slate-400 font-semibold">บันทึกโดย: {sub.reporter_name}</span>
-                    </span>
+                      <span className="text-[10px] text-slate-400 font-medium">บันทึกโดย: {sub.reporter_name}</span>
+                    </div>
 
-                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1.5 rounded-2xl border border-slate-200 bg-slate-900 shadow-inner">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto p-1 rounded-2xl">
                       {photos.map((photoUrl, pIdx) => (
                         <div
                           key={pIdx}
                           onClick={() => setSelectedFullPhoto(photoUrl)}
-                          className="rounded-xl overflow-hidden border border-slate-800 relative group cursor-pointer hover:border-sky-400 transition-all"
+                          className="rounded-2xl overflow-hidden border border-slate-200 relative group cursor-pointer hover:border-sky-500 hover:shadow-xl transition-all h-40 bg-slate-900"
                         >
                           <img
                             src={photoUrl}
                             alt={`Photo ${pIdx + 1} of ${activeModalZone.name}`}
-                            className="w-full h-24 object-cover block group-hover:scale-105 transition-all"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300 block"
                           />
-                          <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                            <span className="text-[10px] font-black text-white bg-sky-600/90 px-2 py-0.5 rounded-md shadow-md">
-                              🔍 คลิกดูขยาย
+                          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                            <span className="text-xs font-black text-white bg-sky-600 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-1">
+                              🔍 คลิกดูขยายเต็มจอ
                             </span>
                           </div>
-                          <span className="absolute bottom-1 right-1 bg-slate-950/80 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">
+                          <span className="absolute bottom-2 right-2 bg-slate-950/80 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md backdrop-blur-xs">
                             #{pIdx + 1}
                           </span>
                         </div>
@@ -716,21 +1066,31 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                 );
               })()}
 
-              {/* Key Metrics Grid (Purely Real Data according to user request) */}
-              <div className="pt-1 space-y-2">
+              {/* Key Metrics Grid (Purely Real Data with Alert Styling) */}
+              <div className="pt-2 space-y-2 border-t border-slate-100">
                 <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
                   พารามิเตอร์ตรวจวัดล่าสุด:
                 </span>
                 {sub && Object.keys(sub.metrics).length > 0 ? (
                   <div className="grid grid-cols-2 gap-2.5">
-                    {Object.entries(sub.metrics).map(([key, val], idx) => (
-                      <div key={idx} className="bg-slate-50 p-3 rounded-2xl border border-slate-200/90 text-center">
-                        <span className="text-[11px] font-bold text-slate-500 block uppercase">{key.replace('_', ' ')}</span>
-                        <div className="text-lg font-black text-slate-900 mt-0.5 tracking-tight">
-                          {val}
+                    {Object.entries(sub.metrics).map(([key, val], idx) => {
+                      const status = getMetricStatus(activeModalZone.id, key, val);
+                      return (
+                        <div key={idx} className={`p-3.5 rounded-2xl border text-center transition-all ${status.cardBg}`}>
+                          <span className="text-[11px] font-bold text-slate-500 block uppercase truncate" title={key}>
+                            {key.replace(/_/g, ' ')}
+                          </span>
+                          <div className={`text-lg sm:text-xl font-black mt-0.5 tracking-tight ${status.textClass}`}>
+                            {val}
+                          </div>
+                          {status.badge && (
+                            <span className={`inline-block mt-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${status.badge.color}`}>
+                              {status.badge.label}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="p-4 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300 space-y-1">

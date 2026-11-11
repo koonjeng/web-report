@@ -27,7 +27,7 @@ export const PlaybookView: React.FC = () => {
           <BookOpen className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-slate-900">TDC Utility — Playbook & คู่มือการใช้งานระบบ</h2>
+          <h2 className="text-xl font-bold text-slate-900">Utility Management — Playbook & คู่มือการใช้งานระบบ</h2>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
             คู่มือขั้นตอนการทำงานล่าสุด ระบบอนุมัติแยกหมวดหมู่ รายงานพลังงาน A4 และประวัติการบันทึกข้อมูล
           </p>

@@ -21,6 +21,13 @@ import {
   Plus,
   Truck,
   FlaskConical,
+  Calculator,
+  Sparkles,
+  Copy,
+  RotateCcw,
+  Package,
+  Fuel,
+  TrendingDown,
 } from 'lucide-react';
 import { FullMonthlyReportData, ReportData, ReportStatus, UserRole } from '@/lib/types';
 import { calculateMetrics, MONTH_NAMES_TH, MONTH_SHORT_TH } from '@/lib/calculations';
@@ -157,6 +164,19 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
   const [rejectInputReason, setRejectInputReason] = useState('');
   const [notification, setNotification] = useState<string | null>(null);
 
+  // Sludge Cost-Saving Expandable Form States (Initialized to 0)
+  const [showSludgeSavingCalc, setShowSludgeSavingCalc] = useState<boolean>(false);
+  const [savingPeriod, setSavingPeriod] = useState<string>('');
+  const [savingDisposalRate, setSavingDisposalRate] = useState<number>(0);
+  const [savingTransportRate, setSavingTransportRate] = useState<number>(0);
+  const [savingBagCost, setSavingBagCost] = useState<number>(0);
+  const [savingBagTonBasis, setSavingBagTonBasis] = useState<number>(0);
+  const [savingPolymerRate, setSavingPolymerRate] = useState<number>(0);
+  const [savingPolymerUsed, setSavingPolymerUsed] = useState<number>(0);
+  const [savingOilRate, setSavingOilRate] = useState<number>(0);
+  const [savingOilUsed, setSavingOilUsed] = useState<number>(0);
+  const [savingCopied, setSavingCopied] = useState<boolean>(false);
+
   // Keep form clean and empty by default for daily data entries
   useEffect(() => {
     let defaultReporterName = '';
@@ -201,6 +221,25 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
       sludge_vac_trip_price: 0,
       sludge_vac_total_baht: 0,
       sludge_grand_total_baht: 0,
+
+      sludge_use_saving_calc: false,
+      sludge_saving_flow_before: 0,
+      sludge_saving_flow_after: 0,
+      sludge_saving_flow_diff: 0,
+      sludge_saving_removal_ton: 0,
+      sludge_saving_disposal_rate: 0,
+      sludge_saving_transport_rate: 0,
+      sludge_saving_bag_cost: 0,
+      sludge_saving_bag_basis: 0,
+      sludge_saving_polymer_rate: 0,
+      sludge_saving_polymer_used: 0,
+      sludge_saving_oil_rate: 0,
+      sludge_saving_oil_used: 0,
+      sludge_saving_total_disposal: 0,
+      sludge_saving_total_actual: 0,
+      sludge_saving_net_baht: 0,
+      sludge_saving_per_ton: 0,
+      sludge_saving_pct: 0,
 
       production_ms1: 0,
       production_ms2: 0,
@@ -322,7 +361,13 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
       return [
         'sludge_removal_desc', 'sludge_tons', 'sludge_trips', 'sludge_disposal_price', 'sludge_trip_price',
         'sludge_total_baht', 'sludge_use_vacuum_truck', 'sludge_vac_removal_desc', 'sludge_vac_tons',
-        'sludge_vac_trips', 'sludge_vac_disposal_price', 'sludge_vac_trip_price', 'sludge_vac_total_baht', 'sludge_grand_total_baht'
+        'sludge_vac_trips', 'sludge_vac_disposal_price', 'sludge_vac_trip_price', 'sludge_vac_total_baht', 'sludge_grand_total_baht',
+        'sludge_use_saving_calc', 'sludge_saving_flow_before', 'sludge_saving_flow_after',
+        'sludge_saving_flow_diff', 'sludge_saving_removal_ton',
+        'sludge_saving_disposal_rate', 'sludge_saving_transport_rate',
+        'sludge_saving_bag_cost', 'sludge_saving_bag_basis', 'sludge_saving_polymer_rate', 'sludge_saving_polymer_used',
+        'sludge_saving_oil_rate', 'sludge_saving_oil_used', 'sludge_saving_total_disposal',
+        'sludge_saving_total_actual', 'sludge_saving_net_baht', 'sludge_saving_per_ton', 'sludge_saving_pct'
       ];
     } else if (catKey === 'cat2') {
       return ['production_ms1', 'production_ms2', 'production_ms3', 'production_total_ms'];
@@ -902,8 +947,8 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
             </div>
           </div>
 
-          {/* CHECKBOX: รถดูดตะกอน */}
-          <div className="pt-2">
+          {/* CHECKBOXES: รถดูดตะกอน & ตัวคำนวณต้นทุนประหยัดตะกอน */}
+          <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="flex items-center gap-2.5 cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-200 hover:bg-slate-100 transition-all">
               <input
                 type="checkbox"
@@ -913,7 +958,23 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
                 className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
               />
               <span className="text-xs font-extrabold text-slate-900">
-                ☑️ เพิ่มข้อมูล "รถดูดตะกอน" (เปิดช่องกรอกเพิ่มเติมสำหรับรถดูดตะกอน)
+                ☑️ เพิ่มข้อมูล "รถดูดตะกอน" (เปิดช่องกรอกเพิ่มเติม)
+              </span>
+            </label>
+
+            <label className="flex items-center gap-2.5 cursor-pointer bg-[#1C6E5A]/10 p-3 rounded-xl border border-[#1C6E5A]/30 hover:bg-[#1C6E5A]/20 transition-all">
+              <input
+                type="checkbox"
+                disabled={isFormLocked}
+                checked={Boolean(formData.sludge_use_saving_calc)}
+                onChange={(e) => {
+                  handleInputChange('sludge_use_saving_calc', e.target.checked);
+                }}
+                className="w-4 h-4 rounded text-[#1C6E5A] focus:ring-[#1C6E5A] cursor-pointer"
+              />
+              <span className="text-xs font-extrabold text-[#123F33] flex items-center gap-1.5">
+                <Calculator className="w-4 h-4 text-[#1C6E5A]" />
+                <span>ตัวคำนวณต้นทุนประหยัด: การจัดการตะกอน (Sludge Cost-Saving)</span>
               </span>
             </label>
           </div>
@@ -998,6 +1059,515 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({
               </div>
             </div>
           )}
+
+          {/* SLUDGE COST-SAVING CALCULATOR EXPANDABLE FORM */}
+          {formData.sludge_use_saving_calc && (() => {
+            const currentSludgeTon = Number(formData.sludge_tons) || 0;
+            const dispRate = Number(formData.sludge_saving_disposal_rate) || 0;
+            const transRate = Number(formData.sludge_saving_transport_rate) || 0;
+            const bagC = Number(formData.sludge_saving_bag_cost) || 0;
+            const bagBasis = Number(formData.sludge_saving_bag_basis) || 0;
+            const polyRate = Number(formData.sludge_saving_polymer_rate) || 0;
+            const polyUsed = Number(formData.sludge_saving_polymer_used) || 0;
+            const oRate = Number(formData.sludge_saving_oil_rate) || 0;
+            const oUsed = Number(formData.sludge_saving_oil_used) || 0;
+
+            const totalRatePerTon = dispRate + transRate;
+            const totalDisposal = currentSludgeTon * totalRatePerTon;
+            const bagRatePerTon = bagBasis !== 0 ? bagC / bagBasis : 0;
+            const bagApplied = currentSludgeTon * bagRatePerTon;
+            const polymerApplied = polyUsed * currentSludgeTon;
+            const oilApplied = oRate * oUsed;
+            const totalActual = bagApplied + polymerApplied + oilApplied;
+            const saving = totalDisposal - totalActual;
+            const savingPerTon = currentSludgeTon !== 0 ? saving / currentSludgeTon : 0;
+            const savingPct = totalDisposal !== 0 ? Math.max(0, Math.min(100, (saving / totalDisposal) * 100)) : 0;
+
+            const fmt = (n: number) => n.toLocaleString('th-TH', { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+
+            const formattedTopDate = formData.report_date
+              ? (() => {
+                const parts = formData.report_date.split('-');
+                if (parts.length === 3) {
+                  return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+                }
+                return formData.report_date;
+              })()
+              : 'ยังไม่ได้เลือกวันที่';
+
+            const handleResetCalc = () => {
+              handleInputChange('sludge_saving_disposal_rate', 0);
+              handleInputChange('sludge_saving_transport_rate', 0);
+              handleInputChange('sludge_saving_bag_cost', 0);
+              handleInputChange('sludge_saving_bag_basis', 0);
+              handleInputChange('sludge_saving_polymer_rate', 0);
+              handleInputChange('sludge_saving_polymer_used', 0);
+              handleInputChange('sludge_saving_oil_rate', 0);
+              handleInputChange('sludge_saving_oil_used', 0);
+              handleInputChange('sludge_saving_total_disposal', 0);
+              handleInputChange('sludge_saving_total_actual', 0);
+              handleInputChange('sludge_saving_net_baht', 0);
+              handleInputChange('sludge_saving_per_ton', 0);
+              handleInputChange('sludge_saving_pct', 0);
+            };
+
+            const handleCopySummary = () => {
+              const text = `สรุปผลประหยัดต้นทุนการจัดการตะกอน — ประจำวันที่ ${formattedTopDate}
+ปริมาณตะกอน: ${fmt(currentSludgeTon)} ตัน
+ค่ากำจัดรวม (เดิม): ${fmt(totalDisposal)} บาท
+รวมค่าใช้จ่ายจริง: ${fmt(totalActual)} บาท
+  - ค่าถุงกรองตะกอน: ${fmt(bagApplied)} บาท
+  - ค่าโพลิเมอร์: ${fmt(polymerApplied)} บาท
+  - ค่าน้ำมันเชื้อเพลิง: ${fmt(oilApplied)} บาท
+ประหยัดได้: ${fmt(saving)} บาท (${fmt(savingPerTon)} บาท/ตัน, ${Math.round(savingPct)}%)`;
+
+              navigator.clipboard.writeText(text);
+              setSavingCopied(true);
+              setTimeout(() => setSavingCopied(false), 2000);
+            };
+
+            return (
+              <div className="space-y-4 bg-[#EEF2F0] p-5 rounded-2xl border border-[#CBD6D0] animate-in fade-in zoom-in-95 text-[#13262C]">
+                {/* Header of Saving Form */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-[#CBD6D0] pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#DE9F35] shadow-[0_0_0_2px_rgba(222,159,53,0.25)] shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-black text-[#123F33] uppercase tracking-wide flex items-center gap-2">
+                        <span>ตัวคำนวณต้นทุนประหยัด: การจัดการตะกอน</span>
+                        <span className="text-[10px] font-mono font-bold bg-[#1C6E5A]/15 text-[#1C6E5A] px-2 py-0.5 rounded">
+                          UTILITY · SLUDGE SAVING
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-[#4C6058] font-medium mt-0.5">
+                        คำนวณเปรียบเทียบค่าใช้จ่ายเดิมกับค่าใช้จ่ายจริง (อ้างอิงจากปริมาณตะกอน {fmt(currentSludgeTon)} ตัน ด้านบน)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={handleCopySummary}
+                      className="py-1.5 px-3 bg-[#1C6E5A] hover:bg-[#123F33] text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    >
+                      {savingCopied ? <Check className="w-3.5 h-3.5 text-[#DE9F35]" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{savingCopied ? 'คัดลอกแล้ว ✓' : 'คัดลอกสรุป'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetCalc}
+                      className="py-1.5 px-3 bg-white hover:bg-slate-100 text-[#4C6058] text-xs font-bold rounded-lg border border-[#CBD6D0] flex items-center gap-1 transition-all cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>รีเซ็ตเป็น 0</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Date Synchronization from Top */}
+                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-[#CBD6D0]">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[#1C6E5A]" />
+                    <span className="text-xs font-mono font-bold uppercase text-[#4C6058]">วันที่บันทึกรายงาน:</span>
+                  </div>
+                  <div className="px-3 py-1 bg-[#1C6E5A]/10 border border-[#1C6E5A]/25 rounded-lg text-xs font-mono font-black text-[#123F33]">
+                    {formattedTopDate}
+                  </div>
+                </div>
+
+                {/* FLOW MEASUREMENT & SLUDGE REMOVAL CALCULATION BAR */}
+                {(() => {
+                  const flowBefore = Number(formData.sludge_saving_flow_before) || 0;
+                  const flowAfter = Number(formData.sludge_saving_flow_after) || 0;
+                  const flowDiff = flowAfter - flowBefore;
+                  const removalTon = flowDiff * 0.05;
+
+                  return (
+                    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD6D0] shadow-xs space-y-3">
+                      <div className="flex items-center justify-between border-b border-dashed border-[#CBD6D0] pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <Droplets className="w-4 h-4 text-[#1C6E5A]" />
+                          <span className="text-xs font-bold text-[#123F33] uppercase tracking-wide">
+                            ตรวจวัดอัตราการไหล & คำนวณปริมาณตะกอน (Flow & Sludge Removal)
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono font-bold bg-[#1C6E5A]/10 text-[#1C6E5A] px-2 py-0.5 rounded">
+                          Flow × 5%
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                        
+                        {/* 1. Flow Before */}
+                        <div className="bg-[#FBFCFB] p-3 rounded-xl border border-slate-200/90 shadow-xs hover:border-[#1C6E5A]/50 transition-all flex flex-col justify-between">
+                          <span className="text-[11px] font-bold text-[#4C6058] block mb-1.5">
+                            Flow ก่อนดูด (Before)
+                          </span>
+                          <div className="relative flex items-center">
+                            <input
+                              type="number"
+                              step="any"
+                              disabled={isFormLocked}
+                              value={formData.sludge_saving_flow_before || ''}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                handleInputChange('sludge_saving_flow_before', val);
+                                const newDiff = flowAfter - val;
+                                const newTon = newDiff * 0.05;
+                                handleInputChange('sludge_saving_flow_diff', newDiff);
+                                handleInputChange('sludge_saving_removal_ton', newTon);
+                              }}
+                              placeholder="0.00"
+                              className="w-full font-mono text-sm font-bold pl-3 pr-14 py-2 rounded-lg border border-slate-200 bg-white focus:border-[#1C6E5A] focus:ring-1 focus:ring-[#1C6E5A] focus:outline-none text-[#13262C]"
+                            />
+                            <span className="absolute right-2.5 text-[11px] font-mono font-bold text-slate-400 pointer-events-none">
+                              m³/h
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 2. Flow After */}
+                        <div className="bg-[#FBFCFB] p-3 rounded-xl border border-slate-200/90 shadow-xs hover:border-[#1C6E5A]/50 transition-all flex flex-col justify-between">
+                          <span className="text-[11px] font-bold text-[#4C6058] block mb-1.5">
+                            Flow หลังดูด (After)
+                          </span>
+                          <div className="relative flex items-center">
+                            <input
+                              type="number"
+                              step="any"
+                              disabled={isFormLocked}
+                              value={formData.sludge_saving_flow_after || ''}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                handleInputChange('sludge_saving_flow_after', val);
+                                const newDiff = val - flowBefore;
+                                const newTon = newDiff * 0.05;
+                                handleInputChange('sludge_saving_flow_diff', newDiff);
+                                handleInputChange('sludge_saving_removal_ton', newTon);
+                              }}
+                              placeholder="0.00"
+                              className="w-full font-mono text-sm font-bold pl-3 pr-14 py-2 rounded-lg border border-slate-200 bg-white focus:border-[#1C6E5A] focus:ring-1 focus:ring-[#1C6E5A] focus:outline-none text-[#13262C]"
+                            />
+                            <span className="absolute right-2.5 text-[11px] font-mono font-bold text-slate-400 pointer-events-none">
+                              m³/h
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 3. after-before / Flow ดูด */}
+                        <div className="bg-[#1C6E5A]/5 p-3 rounded-xl border border-[#1C6E5A]/25 shadow-xs flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-[11px] font-bold text-[#123F33]">
+                              Flow ดูด (After − Before)
+                            </span>
+                            <span className="text-[9px] font-mono text-[#1C6E5A] font-bold bg-[#1C6E5A]/10 px-1.5 py-0.5 rounded">FX</span>
+                          </div>
+                          <div className="flex items-baseline justify-between bg-white px-3 py-2 rounded-lg border border-[#1C6E5A]/20">
+                            <span className="font-mono text-base font-black text-[#123F33]">
+                              {flowDiff.toLocaleString('th-TH', { maximumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[11px] font-mono font-bold text-[#1C6E5A]">
+                              m³/h
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 4. Flow ดูด * 5% / sludge removal Ton */}
+                        <div className="bg-[#DE9F35]/10 p-3 rounded-xl border border-[#DE9F35]/35 shadow-xs flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-[11px] font-bold text-amber-950">
+                              ปริมาณตะกอน (Flow ดูด × 5%)
+                            </span>
+                            <span className="text-[9px] font-mono text-amber-900 font-bold bg-[#DE9F35]/20 px-1.5 py-0.5 rounded">FX</span>
+                          </div>
+                          <div className="flex items-baseline justify-between bg-white px-3 py-2 rounded-lg border border-[#DE9F35]/30">
+                            <span className="font-mono text-base font-black text-amber-900">
+                              {removalTon.toLocaleString('th-TH', { maximumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[11px] font-mono font-extrabold text-amber-800">
+                              Ton (ตัน)
+                            </span>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* 4 Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* CARD 01 */}
+                  <div className="bg-white border border-[#CBD6D0] rounded-xl p-4 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-dashed border-[#CBD6D0] pb-2">
+                      <span className="text-xs font-bold flex items-center gap-1.5 text-[#13262C]">
+                        <Truck className="w-3.5 h-3.5 text-[#1C6E5A]" />
+                        <span>01. ค่ากำจัด & ค่าขนส่ง</span>
+                      </span>
+                      <span className="font-mono font-black text-xs text-[#123F33] bg-[#1C6E5A]/10 px-2 py-0.5 rounded">
+                        {fmt(totalDisposal)} บาท
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] text-[#4C6058] font-bold mb-1">ค่ากำจัด (บาท/ตัน)</label>
+                        <input
+                          type="number"
+                          disabled={isFormLocked}
+                          value={formData.sludge_saving_disposal_rate || ''}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            handleInputChange('sludge_saving_disposal_rate', val);
+                            handleInputChange('sludge_saving_total_disposal', currentSludgeTon * (val + transRate));
+                            handleInputChange('sludge_saving_net_baht', currentSludgeTon * (val + transRate) - totalActual);
+                          }}
+                          placeholder="0"
+                          className="w-full font-mono text-xs font-bold p-2 rounded-lg border border-[#CBD6D0] bg-[#FBFCFB] focus:border-[#1C6E5A] focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#4C6058] font-bold mb-1">ค่าขนส่ง (บาท/ตัน)</label>
+                        <input
+                          type="number"
+                          disabled={isFormLocked}
+                          value={formData.sludge_saving_transport_rate || ''}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            handleInputChange('sludge_saving_transport_rate', val);
+                            handleInputChange('sludge_saving_total_disposal', currentSludgeTon * (dispRate + val));
+                            handleInputChange('sludge_saving_net_baht', currentSludgeTon * (dispRate + val) - totalActual);
+                          }}
+                          placeholder="0"
+                          className="w-full font-mono text-xs font-bold p-2 rounded-lg border border-[#CBD6D0] bg-[#FBFCFB] focus:border-[#1C6E5A] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="p-1.5 rounded-lg bg-[#1C6E5A]/5 border border-dashed border-[#1C6E5A]/30 text-[10px] font-mono text-[#123F33]">
+                      FX: {fmt(currentSludgeTon)} × ({fmt(dispRate)} + {fmt(transRate)}) = {fmt(totalDisposal)} บาท
+                    </div>
+                  </div>
+
+                  {/* CARD 02 */}
+                  <div className="bg-white border border-[#CBD6D0] rounded-xl p-4 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-dashed border-[#CBD6D0] pb-2">
+                      <span className="text-xs font-bold flex items-center gap-1.5 text-[#13262C]">
+                        <Package className="w-3.5 h-3.5 text-[#1C6E5A]" />
+                        <span>02. ถุงกรองตะกอน (Dewatering Bag)</span>
+                      </span>
+                      <span className="font-mono font-black text-xs text-[#123F33] bg-[#1C6E5A]/10 px-2 py-0.5 rounded">
+                        {fmt(bagApplied)} บาท
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] text-[#4C6058] font-bold mb-1">ค่าใช้จ่ายรวม (บาท)</label>
+                        <input
+                          type="number"
+                          disabled={isFormLocked}
+                          value={formData.sludge_saving_bag_cost || ''}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            handleInputChange('sludge_saving_bag_cost', val);
+                          }}
+                          placeholder="0"
+                          className="w-full font-mono text-xs font-bold p-2 rounded-lg border border-[#CBD6D0] bg-[#FBFCFB] focus:border-[#1C6E5A] focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#4C6058] font-bold mb-1">ตะกอนอ้างอิง (ตัน)</label>
+                        <input
+                          type="number"
+                          disabled={isFormLocked}
+                          value={formData.sludge_saving_bag_basis || ''}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            handleInputChange('sludge_saving_bag_basis', val);
+                          }}
+                          placeholder="0"
+                          className="w-full font-mono text-xs font-bold p-2 rounded-lg border border-[#CBD6D0] bg-[#FBFCFB] focus:border-[#1C6E5A] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="p-1.5 rounded-lg bg-[#1C6E5A]/5 border border-dashed border-[#1C6E5A]/30 text-[10px] font-mono text-[#123F33]">
+                      FX: {fmt(currentSludgeTon)} × ({fmt(bagC)} ÷ {fmt(bagBasis)}) = {fmt(bagApplied)} บาท
+                    </div>
+                  </div>
+
+                  {/* CARD 03 */}
+                  <div className="bg-white border border-[#CBD6D0] rounded-xl p-4 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-dashed border-[#CBD6D0] pb-2">
+                      <span className="text-xs font-bold flex items-center gap-1.5 text-[#13262C]">
+                        <Droplets className="w-3.5 h-3.5 text-[#1C6E5A]" />
+                        <span>03. โพลิเมอร์ (Polymer)</span>
+                      </span>
+                      <span className="font-mono font-black text-xs text-[#123F33] bg-[#1C6E5A]/10 px-2 py-0.5 rounded">
+                        {fmt(polymerApplied)} บาท
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] text-[#4C6058] font-bold mb-1">ราคาอ้างอิง (บาท/กก.)</label>
+                        <input
+                          type="number"
+                          disabled={isFormLocked}
+                          value={formData.sludge_saving_polymer_rate || ''}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            handleInputChange('sludge_saving_polymer_rate', val);
+                          }}
+                          placeholder="0"
+                          className="w-full font-mono text-xs font-bold p-2 rounded-lg border border-[#CBD6D0] bg-[#FBFCFB] focus:border-[#1C6E5A] focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#4C6058] font-bold mb-1">ปริมาณที่ใช้ (กก.)</label>
+                        <input
+                          type="number"
+                          disabled={isFormLocked}
+                          value={formData.sludge_saving_polymer_used || ''}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            handleInputChange('sludge_saving_polymer_used', val);
+                          }}
+                          placeholder="0"
+                          className="w-full font-mono text-xs font-bold p-2 rounded-lg border border-[#CBD6D0] bg-[#FBFCFB] focus:border-[#1C6E5A] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="p-1.5 rounded-lg bg-[#1C6E5A]/5 border border-dashed border-[#1C6E5A]/30 text-[10px] font-mono text-[#123F33]">
+                      FX: {fmt(polyUsed)} × {fmt(currentSludgeTon)} = {fmt(polymerApplied)} บาท
+                    </div>
+                  </div>
+
+                  {/* CARD 04 */}
+                  <div className="bg-white border border-[#CBD6D0] rounded-xl p-4 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-dashed border-[#CBD6D0] pb-2">
+                      <span className="text-xs font-bold flex items-center gap-1.5 text-[#13262C]">
+                        <Fuel className="w-3.5 h-3.5 text-[#1C6E5A]" />
+                        <span>04. น้ำมันเชื้อเพลิง (Oil)</span>
+                      </span>
+                      <span className="font-mono font-black text-xs text-[#123F33] bg-[#1C6E5A]/10 px-2 py-0.5 rounded">
+                        {fmt(oilApplied)} บาท
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] text-[#4C6058] font-bold mb-1">ราคา (บาท/ลิตร)</label>
+                        <input
+                          type="number"
+                          disabled={isFormLocked}
+                          value={formData.sludge_saving_oil_rate || ''}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            handleInputChange('sludge_saving_oil_rate', val);
+                          }}
+                          placeholder="0"
+                          className="w-full font-mono text-xs font-bold p-2 rounded-lg border border-[#CBD6D0] bg-[#FBFCFB] focus:border-[#1C6E5A] focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#4C6058] font-bold mb-1">ปริมาณที่ใช้ (ลิตร)</label>
+                        <input
+                          type="number"
+                          disabled={isFormLocked}
+                          value={formData.sludge_saving_oil_used || ''}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            handleInputChange('sludge_saving_oil_used', val);
+                          }}
+                          placeholder="0"
+                          className="w-full font-mono text-xs font-bold p-2 rounded-lg border border-[#CBD6D0] bg-[#FBFCFB] focus:border-[#1C6E5A] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="p-1.5 rounded-lg bg-[#1C6E5A]/5 border border-dashed border-[#1C6E5A]/30 text-[10px] font-mono text-[#123F33]">
+                      FX: {fmt(oRate)} × {fmt(oUsed)} = {fmt(oilApplied)} บาท
+                    </div>
+                  </div>
+                </div>
+
+                {/* Summary Results Card */}
+                <div className="bg-[#123F33] text-[#EAF2EF] rounded-2xl p-5 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="w-20 h-20 rounded-full flex items-center justify-center shrink-0"
+                      style={{
+                        background: `conic-gradient(#DE9F35 ${savingPct}%, rgba(255,255,255,0.12) 0)`,
+                      }}
+                    >
+                      <div className="w-14 h-14 rounded-full bg-[#123F33] flex flex-col items-center justify-center shadow-inner">
+                        <span className="font-mono text-sm font-black">{Math.round(savingPct)}%</span>
+                        <span className="text-[7px] text-[#9FC2B5]">ประหยัด</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#B9D6CB] block">
+                        ผลประหยัดต้นทุนสุทธิ (Total Cost Saving)
+                      </span>
+                      <div className="font-mono text-2xl font-black text-white">
+                        {fmt(saving)} <span className="text-xs font-medium text-[#B9D6CB]">บาท</span>
+                      </div>
+                      <div className="font-mono text-xs text-[#DE9F35] font-bold">
+                        ≈ {fmt(savingPerTon)} บาท/ตัน
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-xs sm:text-right border-t sm:border-t-0 sm:border-l border-white/10 pt-2 sm:pt-0 sm:pl-6 w-full sm:w-auto">
+                    <div className="flex justify-between sm:justify-end gap-3 text-slate-300">
+                      <span>ค่ากำจัดเดิมรวม:</span>
+                      <strong className="font-mono text-white">{fmt(totalDisposal)} ฿</strong>
+                    </div>
+                    <div className="flex justify-between sm:justify-end gap-3 text-slate-300">
+                      <span>รวมค่าใช้จ่ายจริง:</span>
+                      <strong className="font-mono text-white">{fmt(totalActual)} ฿</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Breakdown Cost Table Matching HTML Source */}
+                <div className="bg-white border border-[#CBD6D0] rounded-xl p-4 shadow-xs space-y-2 text-xs">
+                  <h5 className="font-mono font-bold uppercase text-[#4C6058] border-b border-[#CBD6D0]/60 pb-2">
+                    สรุปแจกแจงค่าใช้จ่าย (Cost Breakdown)
+                  </h5>
+                  <div className="flex items-center justify-between py-1 border-b border-[#CBD6D0]/40">
+                    <span className="text-[#4C6058]">ค่ากำจัดรวม (ถ้าไม่มีการปรับปรุง)</span>
+                    <span className="font-mono font-bold text-[#13262C]">{fmt(totalDisposal)} บาท</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#CBD6D0]/40">
+                    <span className="text-[#4C6058]">ค่าถุงกรองตะกอน</span>
+                    <span className="font-mono font-bold text-[#13262C]">{fmt(bagApplied)} บาท</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#CBD6D0]/40">
+                    <span className="text-[#4C6058]">ค่าโพลิเมอร์</span>
+                    <span className="font-mono font-bold text-[#13262C]">{fmt(polymerApplied)} บาท</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#CBD6D0]/40">
+                    <span className="text-[#4C6058]">ค่าน้ำมันเชื้อเพลิง</span>
+                    <span className="font-mono font-bold text-[#13262C]">{fmt(oilApplied)} บาท</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1.5 border-t-2 border-[#13262C] font-bold">
+                    <span>รวมค่าใช้จ่ายจริง</span>
+                    <span className="font-mono text-sm text-[#13262C]">{fmt(totalActual)} บาท</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 bg-[#1C6E5A]/10 px-3 rounded-xl border border-[#1C6E5A]/20 font-black">
+                    <span className="text-[#123F33] flex items-center gap-1.5">
+                      <TrendingDown className="w-4 h-4 text-[#1C6E5A]" />
+                      <span>ประหยัดได้สุทธิ</span>
+                    </span>
+                    <span className={`font-mono text-base ${saving < 0 ? 'text-rose-600' : 'text-[#1C6E5A]'}`}>
+                      {fmt(saving)} บาท
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#1C6E5A]/5 border border-dashed border-[#1C6E5A]/30 text-[10px] font-mono text-[#123F33]">
+                    FX: {fmt(totalDisposal)} − ({fmt(bagApplied)} + {fmt(polymerApplied)} + {fmt(oilApplied)}) = {fmt(totalDisposal)} − {fmt(totalActual)} = {fmt(saving)} บาท
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* GRAND TOTAL SLUDGE SUMMARY */}
           <div className="bg-amber-900 text-white p-4 rounded-xl flex items-center justify-between shadow-sm">

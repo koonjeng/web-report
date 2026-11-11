@@ -106,8 +106,8 @@ export function exportMonthlyReportsToExcel(year: number, reports: FullMonthlyRe
 
   const worksheet = XLSX.utils.json_to_sheet(exportRows);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, `TDC_Energy_Report_${year}`);
+  XLSX.utils.book_append_sheet(workbook, worksheet, `Energy_Report_${year}`);
 
   // Download XLSX file
-  XLSX.writeFile(workbook, `TDC_Energy_Report_${year}.xlsx`);
+  XLSX.writeFile(workbook, `Energy_Report_${year}.xlsx`);
 }

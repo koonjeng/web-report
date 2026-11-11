@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TDC Utility",
-  description: "ระบบบันทึกและอนุมัติข้อมูลการใช้พลังงานประจำเดือน TDC Utility Management System",
+  title: "Utility Management System",
+  description: "ระบบบันทึกและจัดการข้อมูลการใช้พลังงานประจำเดือน Utility Management System",
 };
 
 export default function RootLayout({

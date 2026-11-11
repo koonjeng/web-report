@@ -67,6 +67,26 @@ export interface ReportData {
   sludge_vac_total_baht?: number;
   sludge_grand_total_baht?: number;
 
+  // Checkbox ตัวคำนวณต้นทุนประหยัดตะกอน (Sludge Cost-Saving)
+  sludge_use_saving_calc?: boolean;
+  sludge_saving_flow_before?: number;
+  sludge_saving_flow_after?: number;
+  sludge_saving_flow_diff?: number;
+  sludge_saving_removal_ton?: number;
+  sludge_saving_disposal_rate?: number;
+  sludge_saving_transport_rate?: number;
+  sludge_saving_bag_cost?: number;
+  sludge_saving_bag_basis?: number;
+  sludge_saving_polymer_rate?: number;
+  sludge_saving_polymer_used?: number;
+  sludge_saving_oil_rate?: number;
+  sludge_saving_oil_used?: number;
+  sludge_saving_total_disposal?: number;
+  sludge_saving_total_actual?: number;
+  sludge_saving_net_baht?: number;
+  sludge_saving_per_ton?: number;
+  sludge_saving_pct?: number;
+
   // --- หมวดที่ 2: การผลิต (Production) ---
   production_ms1?: number; // MS1 (ตัน)
   production_ms2?: number; // MS2 (ตัน)
