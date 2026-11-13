@@ -23,7 +23,7 @@ const AUDIT_LOGS_STORAGE_KEY = 'tdc_energy_audit_logs_v5_clean';
 
 // Initial Clean Admin Profile
 const INITIAL_PROFILES: Profile[] = [
-  { id: 'user-admin-1', email: 'admin@tdc.com', role: 'admin', created_at: new Date().toISOString() },
+  { id: 'user-admin-1', email: 'admin@test.com', role: 'admin', created_at: new Date().toISOString() },
 ];
 
 export function getLocalProfiles(): Profile[] {
@@ -274,11 +274,12 @@ export async function signInUser(email: string, password: string): Promise<{ ema
   }
 
   // Master bypass / local developer fallback for admin login
+  const normalizedEmail = email.trim().toLowerCase().replace(',', '.');
   if (
-    email.toLowerCase() === 'admin@tdc.com' &&
-    (password === 'admin1234' || password === 'admin' || password === '123456' || password === 'admin@tdc.com')
+    (normalizedEmail === 'admin@test.com' || normalizedEmail === 'admin@tdc.com') &&
+    (password === 'admin1234' || password === 'admin' || password === '123456' || password === 'admin@test.com' || password === 'admin@test,com')
   ) {
-    return { email: 'admin@tdc.com', role: 'admin' };
+    return { email: 'admin@test.com', role: 'admin' };
   }
 
   if (isSupabaseConfigured && supabase) {
@@ -291,7 +292,7 @@ export async function signInUser(email: string, password: string): Promise<{ ema
       if (!authError && authData.user) {
         // First check if email indicates admin
         const userEmail = authData.user.email || email;
-        const lowerEmail = userEmail.toLowerCase();
+        const lowerEmail = userEmail.toLowerCase().replace(',', '.');
         
         let userRole: UserRole = 'approver';
 
@@ -304,7 +305,7 @@ export async function signInUser(email: string, password: string): Promise<{ ema
 
         if (profile?.role) {
           userRole = profile.role as UserRole;
-        } else if (lowerEmail.includes('admin') || lowerEmail === 'admin@tdc.com') {
+        } else if (lowerEmail.includes('admin') || lowerEmail === 'admin@test.com' || lowerEmail === 'admin@tdc.com') {
           userRole = 'admin';
         }
 

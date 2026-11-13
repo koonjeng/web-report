@@ -31,7 +31,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     setLoading(true);
 
     try {
-      const result = await signInUser(email, password);
+      const sanitizedEmail = email.trim().replace(/,/g, '.');
+      const result = await signInUser(sanitizedEmail, password);
       setLoading(false);
 
       if ('error' in result) {
@@ -179,11 +180,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </label>
               <div className="relative">
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@tdc.com หรือ name@example.com"
+                  onChange={(e) => setEmail(e.target.value.replace(/,/g, '.'))}
+                  placeholder="admin@test.com หรือ name@example.com"
                   className="w-full pl-4 pr-10 py-3.5 text-xs sm:text-sm bg-[#132742] border border-[#2b4b73] rounded-2xl focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 text-white placeholder:text-sky-200/30 transition-all font-medium"
                 />
                 <Mail className="w-4 h-4 text-sky-200/40 absolute right-4 top-4 pointer-events-none" />
