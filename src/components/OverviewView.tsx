@@ -268,33 +268,6 @@ const ZONES: ZoneMarker[] = [
   },
 ];
 
-// Mockup Blueprint styling helpers
-const getZoneGradientId = (id: string) => {
-  if (id.startsWith('polishing')) return 'url(#polishingGrad)';
-  if (id.startsWith('biogas')) return 'url(#biogasGrad)';
-  if (id === 'aeration') return 'url(#aerationGrad)';
-  if (id === 'as') return 'url(#asGrad)';
-  if (id === 'clarify') return 'url(#clarifyGrad)';
-  if (id === 'ss') return 'url(#ssGrad)';
-  if (id.startsWith('mix')) return 'url(#mixGrad)';
-  if (id === 'scrubber') return 'url(#scrubberGrad)';
-  return 'url(#polishingGrad)';
-};
-
-const getZoneStroke = (id: string, isSelected: boolean, isHovered: boolean) => {
-  if (isSelected) return '#f59e0b';
-  if (isHovered) return '#38bdf8';
-  if (id.startsWith('polishing')) return '#38bdf8';
-  if (id.startsWith('biogas')) return '#818cf8';
-  if (id === 'aeration') return '#2dd4bf';
-  if (id === 'as') return '#60a5fa';
-  if (id === 'clarify') return '#7dd3fc';
-  if (id === 'ss') return '#f472b6';
-  if (id.startsWith('mix')) return '#34d399';
-  if (id === 'scrubber') return '#fbbf24';
-  return '#94a3b8';
-};
-
 export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntry }) => {
   const [selectedZone, setSelectedZone] = useState<ZoneMarker | null>(ZONES[0]);
   const [hoveredZone, setHoveredZone] = useState<ZoneMarker | null>(null);
@@ -517,12 +490,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-sky-400" />
               <span className="font-bold text-xs tracking-wide uppercase text-slate-200">
-                ผังจำลองระบบบ่อบำบัดน้ำเสีย & ก๊าซชีวภาพ (Wastewater Plant Mockup Diagram)
+                ผังระบบบ่อบำบัดน้ำเสีย (Wastewater Treatment Plant Overview)
               </span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">
-                💡 คลิกที่ตัวหนังสือป้ายชื่อบ่อในผังเพื่อเปิดดูข้อมูล
+                💡 คลิกที่ตัวหนังสือป้ายชื่อบ่อในภาพเพื่อดูข้อมูล
               </span>
               {isFullscreen && (
                 <button
@@ -535,193 +508,48 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
             </div>
           </div>
 
-          {/* Map Viewport: High-Tech Schematic Plant Layout Mockup */}
-          <div className="relative overflow-hidden bg-[#08101d] flex items-center justify-center p-2 sm:p-4 min-h-[460px] select-none">
-            <div className="relative w-full aspect-[16/10] sm:aspect-[16/9.5] max-w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80 bg-[#070e1a]">
+          {/* Map Viewport with High-Res Aerial Image & Interactive Overlay */}
+          <div className="relative overflow-hidden bg-slate-950 flex items-center justify-center p-1 sm:p-2 min-h-[450px] select-none">
+            <div className="relative w-full inline-block rounded-xl overflow-hidden shadow-2xl border border-slate-800">
+              {/* Base Aerial Photograph */}
+              <img
+                src="/overview_ponds.jpg"
+                alt="Wastewater Treatment Plant Overview"
+                className="w-full h-auto object-cover block rounded-xl"
+              />
+
+              {/* Interactive Polygon Click Areas with Subtle Highlight on Hover */}
               <svg
-                className="w-full h-full block rounded-2xl"
+                className="absolute inset-0 w-full h-full pointer-events-none rounded-xl"
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
               >
-                <defs>
-                  {/* Subtle Blueprint Grid Pattern */}
-                  <pattern id="blueprint-grid" width="4" height="4" patternUnits="userSpaceOnUse">
-                    <path d="M 4 0 L 0 0 0 4" fill="none" stroke="#17263c" strokeWidth="0.15" />
-                    <circle cx="4" cy="4" r="0.25" fill="#223955" />
-                  </pattern>
-
-                  {/* Tech Grid Major Accent */}
-                  <pattern id="blueprint-major-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#253e61" strokeWidth="0.25" strokeDasharray="1 1" />
-                  </pattern>
-
-                  {/* Gradients for each pond type */}
-                  <linearGradient id="polishingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#0284c7" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#0369a1" stopOpacity="0.75" />
-                  </linearGradient>
-
-                  <linearGradient id="biogasGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.55" />
-                    <stop offset="100%" stopColor="#312e81" stopOpacity="0.8" />
-                  </linearGradient>
-
-                  <linearGradient id="aerationGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#0d9488" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#115e59" stopOpacity="0.75" />
-                  </linearGradient>
-
-                  <linearGradient id="asGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2563eb" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#1e40af" stopOpacity="0.75" />
-                  </linearGradient>
-
-                  <linearGradient id="clarifyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.55" />
-                    <stop offset="100%" stopColor="#0891b2" stopOpacity="0.8" />
-                  </linearGradient>
-
-                  <linearGradient id="ssGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#c026d3" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#86198f" stopOpacity="0.75" />
-                  </linearGradient>
-
-                  <linearGradient id="mixGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.55" />
-                    <stop offset="100%" stopColor="#047857" stopOpacity="0.8" />
-                  </linearGradient>
-
-                  <linearGradient id="scrubberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#b45309" stopOpacity="0.85" />
-                  </linearGradient>
-
-                  {/* Flow pipeline stroke glow */}
-                  <filter id="pipelineGlow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="0.4" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                  </filter>
-                </defs>
-
-                {/* Base Blueprint Grids */}
-                <rect width="100" height="100" fill="#08101d" />
-                <rect width="100" height="100" fill="url(#blueprint-grid)" />
-                <rect width="100" height="100" fill="url(#blueprint-major-grid)" />
-
-                {/* Plant Layout Boundary / Perimeter */}
-                <rect
-                  x="2"
-                  y="2"
-                  width="96"
-                  height="96"
-                  rx="3"
-                  fill="none"
-                  stroke="#1c3553"
-                  strokeWidth="0.4"
-                  strokeDasharray="2 2"
-                />
-
-                {/* Roadways / Access Lanes Schematic */}
-                <path
-                  d="M 3 39 L 97 35 M 46 3 L 46 97 M 84 3 L 84 97"
-                  stroke="#122438"
-                  strokeWidth="2.2"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-
-                {/* Inter-Pond Process Pipeline Flow Lines with Directional Dashes */}
-                <g filter="url(#pipelineGlow)">
-                  {/* Mix 1 -> Biogas 1 */}
-                  <path
-                    d="M 32 93 L 42 90 L 48 86"
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="0.5"
-                    strokeDasharray="1.2 1"
-                  />
-                  {/* Biogas 1 -> Aeration */}
-                  <path
-                    d="M 48 76 L 44 65 L 35 48"
-                    fill="none"
-                    stroke="#818cf8"
-                    strokeWidth="0.5"
-                    strokeDasharray="1.2 1"
-                  />
-                  {/* Mix 2 -> Biogas 2 */}
-                  <path
-                    d="M 87 32 L 80 30 L 68 28"
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="0.5"
-                    strokeDasharray="1.2 1"
-                  />
-                  {/* Biogas 2 -> Scrubber */}
-                  <path
-                    d="M 75 27 L 86 27"
-                    fill="none"
-                    stroke="#fbbf24"
-                    strokeWidth="0.5"
-                    strokeDasharray="1 1"
-                  />
-                  {/* Aeration -> Clarify -> AS */}
-                  <path
-                    d="M 38 44 L 52 44 L 65 48"
-                    fill="none"
-                    stroke="#38bdf8"
-                    strokeWidth="0.6"
-                    strokeDasharray="1.5 1"
-                  />
-                  {/* AS -> SS */}
-                  <path
-                    d="M 70 56 L 68 65"
-                    fill="none"
-                    stroke="#f472b6"
-                    strokeWidth="0.5"
-                    strokeDasharray="1.2 1"
-                  />
-                  {/* SS / Clarify -> Polishing 1 & 2 */}
-                  <path
-                    d="M 68 70 L 52 50 L 30 30"
-                    fill="none"
-                    stroke="#38bdf8"
-                    strokeWidth="0.5"
-                    strokeDasharray="1.2 1"
-                  />
-                  <path
-                    d="M 52 40 L 62 25 L 70 20"
-                    fill="none"
-                    stroke="#38bdf8"
-                    strokeWidth="0.5"
-                    strokeDasharray="1.2 1"
-                  />
-                </g>
-
-                {/* Render Zone Polygons */}
                 {ZONES.map((zone) => {
                   const pointsString = zone.polygonPoints.map((pt) => `${pt[0]},${pt[1]}`).join(' ');
                   const isSelected = selectedZone?.id === zone.id;
                   const isHovered = hoveredZone?.id === zone.id;
-                  const gradId = getZoneGradientId(zone.id);
-                  const strokeColor = getZoneStroke(zone.id, isSelected, isHovered);
 
                   return (
-                    <g key={zone.id} className="cursor-pointer transition-all duration-200">
-                      {/* Polygon Shape with Gradient Fill */}
+                    <g key={zone.id} className="pointer-events-auto cursor-pointer">
                       <polygon
                         points={pointsString}
-                        fill={gradId}
-                        stroke={strokeColor}
-                        strokeWidth={isSelected ? '0.9' : isHovered ? '0.7' : '0.4'}
-                        strokeLinejoin="round"
-                        className="transition-all duration-300"
-                        style={{
-                          filter: isSelected
-                            ? 'drop-shadow(0 0 5px rgba(245,158,11,0.7))'
+                        fill={
+                          isSelected
+                            ? 'rgba(245, 158, 11, 0.28)'
                             : isHovered
-                              ? 'drop-shadow(0 0 4px rgba(56,189,248,0.6))'
-                              : 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))',
-                        }}
+                              ? 'rgba(56, 189, 248, 0.22)'
+                              : 'transparent'
+                        }
+                        stroke={
+                          isSelected
+                            ? '#f59e0b'
+                            : isHovered
+                              ? '#38bdf8'
+                              : 'rgba(255, 255, 255, 0.3)'
+                        }
+                        strokeWidth={isSelected ? '0.8' : isHovered ? '0.6' : '0.25'}
+                        strokeDasharray={isSelected || isHovered ? 'none' : '1.5 1'}
+                        className="transition-all duration-200"
                         onMouseEnter={() => setHoveredZone(zone)}
                         onMouseLeave={() => setHoveredZone(null)}
                         onClick={() => handleZoneClick(zone)}
@@ -729,13 +557,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                     </g>
                   );
                 })}
-
-                {/* Technical Direction Badges & Plant Flow Labels */}
-                <g className="pointer-events-none select-none text-[2.2px] font-mono font-bold">
-                  <text x="4" y="96" fill="#34d399">↳ WASTEWATER INFLOW (น้ำเสียเข้าระบบ)</text>
-                  <text x="4" y="7" fill="#38bdf8">↱ TREATED EFFLUENT (น้ำบำบัดแล้ว)</text>
-                  <text x="73" y="10" fill="#fbbf24">⚡ BIOGAS TO POWER (ก๊าซชีวภาพ)</text>
-                </g>
               </svg>
 
               {/* Interactive Pond Name Text Badges */}
@@ -771,29 +592,14 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
             </div>
           </div>
 
-          {/* Bottom Schematic Legend Bar */}
+          {/* Bottom Information Bar */}
           <div className="p-3.5 bg-slate-900 border-t border-slate-800 text-slate-300 text-xs font-semibold flex flex-wrap items-center justify-between gap-3 shrink-0">
-            <div className="flex items-center flex-wrap gap-2 text-[11px]">
-              <span className="text-slate-400 font-bold mr-1">สัญลักษณ์ผังจำลอง:</span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-950/80 border border-sky-700 text-sky-300">
-                <span className="w-2 h-2 rounded-full bg-sky-400" />
-                บ่อกักเก็บน้ำ (Polishing)
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-950/80 border border-indigo-700 text-indigo-300">
-                <span className="w-2 h-2 rounded-full bg-indigo-400" />
-                บ่อก๊าซชีวภาพ (Biogas)
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-950/80 border border-teal-700 text-teal-300">
-                <span className="w-2 h-2 rounded-full bg-teal-400" />
-                บ่อเติมอากาศ (Aeration/AS)
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-950/80 border border-emerald-700 text-emerald-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                บ่อผสม (Mix)
-              </span>
-            </div>
+            <span className="flex items-center gap-1.5 text-sky-400">
+              <Info className="w-4 h-4 shrink-0" />
+              <span>คลิกที่ป้ายชื่อตัวหนังสือในภาพ (เช่น Polishing 1, Biogas 1, AS) เพื่อเปิดการ์ดแสดงข้อมูล</span>
+            </span>
             <span className="text-[11px] text-emerald-400 bg-slate-800 px-2.5 py-1 rounded-md font-bold shrink-0">
-              ✓ คลิกบ่อเพื่อดูการ์ดข้อมูล & พารามิเตอร์
+              ✓ เปิดการ์ด Popup เมื่อคลิก
             </span>
           </div>
         </div>
