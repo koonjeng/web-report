@@ -518,46 +518,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                 className="w-full h-auto object-cover block rounded-xl"
               />
 
-              {/* Interactive Polygon Click Areas with Subtle Highlight on Hover */}
-              <svg
-                className="absolute inset-0 w-full h-full pointer-events-none rounded-xl"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-              >
-                {ZONES.map((zone) => {
-                  const pointsString = zone.polygonPoints.map((pt) => `${pt[0]},${pt[1]}`).join(' ');
-                  const isSelected = selectedZone?.id === zone.id;
-                  const isHovered = hoveredZone?.id === zone.id;
-
-                  return (
-                    <g key={zone.id} className="pointer-events-auto cursor-pointer">
-                      <polygon
-                        points={pointsString}
-                        fill={
-                          isSelected
-                            ? 'rgba(245, 158, 11, 0.22)'
-                            : isHovered
-                              ? 'rgba(56, 189, 248, 0.18)'
-                              : 'transparent'
-                        }
-                        stroke={
-                          isSelected
-                            ? '#f59e0b'
-                            : isHovered
-                              ? '#38bdf8'
-                              : 'none'
-                        }
-                        strokeWidth={isSelected ? '0.8' : isHovered ? '0.6' : '0'}
-                        className="transition-all duration-200"
-                        onMouseEnter={() => setHoveredZone(zone)}
-                        onMouseLeave={() => setHoveredZone(null)}
-                        onClick={() => handleZoneClick(zone)}
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
-
               {/* Interactive Pond Name Text Badges */}
               {ZONES.map((zone) => {
                 const isSelected = selectedZone?.id === zone.id;
