@@ -535,9 +535,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                         points={pointsString}
                         fill={
                           isSelected
-                            ? 'rgba(245, 158, 11, 0.28)'
+                            ? 'rgba(245, 158, 11, 0.22)'
                             : isHovered
-                              ? 'rgba(56, 189, 248, 0.22)'
+                              ? 'rgba(56, 189, 248, 0.18)'
                               : 'transparent'
                         }
                         stroke={
@@ -545,10 +545,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigateToPondEntr
                             ? '#f59e0b'
                             : isHovered
                               ? '#38bdf8'
-                              : 'rgba(255, 255, 255, 0.3)'
+                              : 'none'
                         }
-                        strokeWidth={isSelected ? '0.8' : isHovered ? '0.6' : '0.25'}
-                        strokeDasharray={isSelected || isHovered ? 'none' : '1.5 1'}
+                        strokeWidth={isSelected ? '0.8' : isHovered ? '0.6' : '0'}
                         className="transition-all duration-200"
                         onMouseEnter={() => setHoveredZone(zone)}
                         onMouseLeave={() => setHoveredZone(null)}
